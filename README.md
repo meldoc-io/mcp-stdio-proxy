@@ -107,9 +107,11 @@ echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
 - ✅ JSON-RPC 2.0 protocol
 - ✅ Single and batch requests
 - ✅ Proper error handling with JSON-RPC error codes
-- ✅ Request timeout handling (30 seconds)
+- ✅ Request timeout handling (25 seconds)
 - ✅ Network error recovery
 - ✅ Line-by-line processing for streaming
+- ✅ Automatic support for all MCP tools (including `server_info`)
+- ✅ Metadata (`_meta`) in responses for better context
 
 ## JSON-RPC Error Codes
 
@@ -121,6 +123,49 @@ The proxy uses standard JSON-RPC 2.0 error codes:
 - `-32602`: Invalid params
 - `-32603`: Internal error (network errors, timeouts, etc.)
 - `-32000`: Server error (HTTP 4xx/5xx responses)
+
+## Available Tools
+
+The proxy automatically supports all tools provided by the meldoc MCP API, including:
+
+- **`server_info`** - Get information about the server configuration, available projects, and token capabilities
+- **`docs_list`** - List available documentation
+- **`docs_get`** - Get specific documentation content
+- And other tools as provided by the API
+
+### Example: Using `server_info`
+
+You can get server information using the `server_info` tool:
+
+```bash
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"server_info","arguments":{}}}' | \
+  MELDOC_MCP_TOKEN=your_token_here npx @meldocio/mcp-stdio-proxy
+```
+
+The response includes:
+- Server name (from token)
+- Token description (if provided)
+- Available projects with IDs, names, and aliases
+- Token capabilities (read, update, create, delete)
+- Usage hints
+
+### Response Metadata
+
+All tool responses now include a `_meta` field with contextual information:
+
+```json
+{
+  "items": [...],
+  "_meta": {
+    "server": "My Token",
+    "projects": ["Frontend Docs", "Backend API"],
+    "capabilities": ["read"],
+    "hint": "Read permission required for this operation"
+  }
+}
+```
+
+This metadata helps AI assistants understand the context and limitations of the current token.
 
 ## Troubleshooting
 

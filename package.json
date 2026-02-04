@@ -1,6 +1,6 @@
 {
   "name": "@meldocio/mcp-stdio-proxy",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "MCP stdio proxy for meldoc - connects Claude Desktop to meldoc MCP API",
   "main": "bin/meldoc-mcp-proxy.js",
   "bin": {
