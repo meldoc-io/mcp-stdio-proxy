@@ -9,3 +9,6 @@ coverage/
 *.swp
 *.swo
 *~
+publish.sh
+.npmrc.example
+NPMRC_SETUP.md

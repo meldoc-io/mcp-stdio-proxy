@@ -1,4 +1,4 @@
-# @meldoc/mcp-stdio-proxy
+# @meldocio/mcp-stdio-proxy
 
 MCP stdio proxy for meldoc - connects Claude Desktop to meldoc MCP API without requiring CLI installation.
 
@@ -11,7 +11,7 @@ This npm package provides a lightweight proxy that bridges JSON-RPC communicatio
 The package is designed to be used via `npx`, so no installation is required. However, if you want to install it globally:
 
 ```bash
-npm install -g @meldoc/mcp-stdio-proxy
+npm install -g @meldocio/mcp-stdio-proxy
 ```
 
 ## Usage
@@ -21,16 +21,19 @@ npm install -g @meldoc/mcp-stdio-proxy
 Add the following configuration to your `claude_desktop_config.json` file:
 
 **macOS:**
+
 ```
 ~/Library/Application Support/Claude/claude_desktop_config.json
 ```
 
 **Windows:**
+
 ```
 %APPDATA%\Claude\claude_desktop_config.json
 ```
 
 **Linux:**
+
 ```
 ~/.config/Claude/claude_desktop_config.json
 ```
@@ -40,7 +43,7 @@ Add the following configuration to your `claude_desktop_config.json` file:
   "mcpServers": {
     "meldoc": {
       "command": "npx",
-      "args": ["-y", "@meldoc/mcp-stdio-proxy"],
+      "args": ["-y", "@meldocio/mcp-stdio-proxy"],
       "env": {
         "MELDOC_MCP_TOKEN": "your_token_here"
       }
@@ -63,7 +66,7 @@ Example with custom API URL:
   "mcpServers": {
     "meldoc": {
       "command": "npx",
-      "args": ["-y", "@meldoc/mcp-stdio-proxy"],
+      "args": ["-y", "@meldocio/mcp-stdio-proxy"],
       "env": {
         "MELDOC_MCP_TOKEN": "your_token_here",
         "MELDOC_API_URL": "https://custom.api.example.com"
@@ -79,7 +82,7 @@ You can test the proxy directly from the command line:
 
 ```bash
 echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
-  MELDOC_MCP_TOKEN=your_token_here npx @meldoc/mcp-stdio-proxy
+  MELDOC_MCP_TOKEN=your_token_here npx @meldocio/mcp-stdio-proxy
 ```
 
 Or with a custom API URL:
@@ -88,7 +91,7 @@ Or with a custom API URL:
 echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
   MELDOC_MCP_TOKEN=your_token_here \
   MELDOC_API_URL=https://custom.api.example.com \
-  npx @meldoc/mcp-stdio-proxy
+  npx @meldocio/mcp-stdio-proxy
 ```
 
 ## How It Works
@@ -143,6 +146,7 @@ curl https://api.meldoc.io/mcp/v1/rpc \
 ### Claude Desktop not connecting
 
 **Solution:**
+
 1. Verify the configuration JSON is valid (use a JSON validator)
 2. Check that the file path is correct for your operating system
 3. Restart Claude Desktop completely
@@ -155,13 +159,13 @@ To debug issues, you can test the proxy directly:
 ```bash
 # Test with a simple request
 echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
-  MELDOC_MCP_TOKEN=your_token npx @meldoc/mcp-stdio-proxy
+  MELDOC_MCP_TOKEN=your_token npx @meldocio/mcp-stdio-proxy
 
 # Test with verbose output (if needed)
 echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
   MELDOC_MCP_TOKEN=your_token \
   DEBUG=1 \
-  npx @meldoc/mcp-stdio-proxy
+  npx @meldocio/mcp-stdio-proxy
 ```
 
 ## Development
@@ -207,8 +211,9 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## Support
 
 For issues, questions, or contributions, please visit:
-- GitHub Issues: https://github.com/meldoc/mcp-stdio-proxy/issues
-- Documentation: https://docs.meldoc.io
+
+- GitHub Issues: <https://github.com/meldoc/mcp-stdio-proxy/issues>
+- Documentation: <https://docs.meldoc.io>
 
 ## Related
 

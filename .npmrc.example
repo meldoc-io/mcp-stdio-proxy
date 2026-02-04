@@ -1,0 +1,10 @@
+# .npmrc configuration example
+# Copy this file to .npmrc and add your token
+# DO NOT commit .npmrc to git!
+
+# Token for publishing packages to @meldocio organization
+# Get your token at: https://www.npmjs.com/settings/YOUR_USERNAME/tokens
+//registry.npmjs.org/:_authToken=YOUR_NPM_TOKEN_HERE
+
+# Optional: configuration for scoped packages
+@meldocio:registry=https://registry.npmjs.org/
