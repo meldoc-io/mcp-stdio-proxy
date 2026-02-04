@@ -127,7 +127,19 @@ async function handleRequest(request) {
     // Process batch requests sequentially
     for (const req of request) {
       if (req) {
-        await processSingleRequest(req);
+        // Check if this is a protocol method that should be handled locally
+        const method = req.method;
+        if (method === 'initialize') {
+          handleInitialize(req);
+        } else if (method === 'initialized') {
+          // Notification - no response needed
+          continue;
+        } else if (method === 'ping') {
+          handlePing(req);
+        } else {
+          // Forward to backend
+          await processSingleRequest(req);
+        }
       }
     }
     return;
@@ -140,11 +152,69 @@ async function handleRequest(request) {
     return;
   }
   
+  // Handle MCP protocol methods locally (not forwarded to backend)
+  const method = request.method;
+  if (method === 'initialize') {
+    handleInitialize(request);
+    return;
+  } else if (method === 'initialized') {
+    // Notification - no response needed per MCP spec
+    return;
+  } else if (method === 'ping') {
+    handlePing(request);
+    return;
+  }
+  
+  // All other methods (tools/*, resources/*, etc.) are forwarded to backend
   await processSingleRequest(request);
 }
 
 /**
+ * Handle MCP initialize method
+ * This is called by Claude Desktop to establish the connection
+ */
+function handleInitialize(request) {
+  const response = {
+    jsonrpc: '2.0',
+    id: request.id,
+    result: {
+      protocolVersion: '2025-06-18',
+      capabilities: {
+        tools: {},
+        resources: {}
+      },
+      serverInfo: {
+        name: '@meldocio/mcp-stdio-proxy',
+        version: '1.0.1'
+      }
+    }
+  };
+  
+  process.stdout.write(JSON.stringify(response) + '\n');
+  if (process.stdout.isTTY) {
+    process.stdout.flush();
+  }
+}
+
+/**
+ * Handle MCP ping method (keep-alive)
+ */
+function handlePing(request) {
+  const response = {
+    jsonrpc: '2.0',
+    id: request.id,
+    result: {}
+  };
+  
+  process.stdout.write(JSON.stringify(response) + '\n');
+  if (process.stdout.isTTY) {
+    process.stdout.flush();
+  }
+}
+
+/**
  * Process a single JSON-RPC request
+ * Forwards the request to the backend MCP API
  */
 async function processSingleRequest(request) {
   try {
