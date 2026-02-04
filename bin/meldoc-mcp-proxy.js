@@ -18,7 +18,7 @@ const JSON_RPC_ERROR_CODES = {
 const token = process.env.MELDOC_MCP_TOKEN;
 const apiUrl = process.env.MELDOC_API_URL || 'https://api.meldoc.io';
 const rpcEndpoint = `${apiUrl}/mcp/v1/rpc`;
-const REQUEST_TIMEOUT = 30000; // 30 seconds
+const REQUEST_TIMEOUT = 25000; // 25 seconds (less than Claude Desktop's 30s timeout)
 
 // Validate token
 if (!token) {
@@ -86,8 +86,11 @@ function handleLine(line) {
     const request = JSON.parse(line);
     handleRequest(request);
   } catch (parseError) {
-    // Invalid JSON - send parse error
-    sendError(null, JSON_RPC_ERROR_CODES.PARSE_ERROR, `Parse error: ${parseError.message}`);
+    // Invalid JSON - try to extract id from the raw line if possible
+    // For parse errors, we can't reliably get the id, so we skip the response
+    // to avoid Zod validation errors in Claude Desktop (it doesn't accept id: null)
+    // This is acceptable per JSON-RPC spec - parse errors can be ignored if id is unknown
+    console.error(`Parse error: ${parseError.message}`, { to: 'stderr' });
   }
 }
 
@@ -131,11 +134,16 @@ async function handleRequest(request) {
         const method = req.method;
         if (method === 'initialize') {
           handleInitialize(req);
-        } else if (method === 'initialized') {
+        } else if (method === 'initialized' || method === 'notifications/initialized') {
+          // Notification - no response needed
+          continue;
+        } else if (method === 'notifications/cancelled') {
           // Notification - no response needed
           continue;
         } else if (method === 'ping') {
           handlePing(req);
+        } else if (method === 'resources/list') {
+          handleResourcesList(req);
         } else {
           // Forward to backend
           await processSingleRequest(req);
@@ -157,15 +165,22 @@ async function handleRequest(request) {
   if (method === 'initialize') {
     handleInitialize(request);
     return;
-  } else if (method === 'initialized') {
+  } else if (method === 'initialized' || method === 'notifications/initialized') {
     // Notification - no response needed per MCP spec
+    return;
+  } else if (method === 'notifications/cancelled') {
+    // Notification - no response needed
     return;
   } else if (method === 'ping') {
     handlePing(request);
     return;
+  } else if (method === 'resources/list') {
+    // Return empty resources list (resources not supported yet)
+    handleResourcesList(request);
+    return;
   }
   
-  // All other methods (tools/*, resources/*, etc.) are forwarded to backend
+  // All other methods (tools/*, etc.) are forwarded to backend
   await processSingleRequest(request);
 }
 
@@ -185,7 +200,7 @@ function handleInitialize(request) {
       },
       serverInfo: {
         name: '@meldocio/mcp-stdio-proxy',
-        version: '1.0.1'
+        version: '1.0.2'
       }
     }
   };
@@ -204,6 +219,25 @@ function handlePing(request) {
     jsonrpc: '2.0',
     id: request.id,
     result: {}
+  };
+  
+  process.stdout.write(JSON.stringify(response) + '\n');
+  if (process.stdout.isTTY) {
+    process.stdout.flush();
+  }
+}
+
+/**
+ * Handle resources/list method
+ * Returns empty list as resources are not supported yet
+ */
+function handleResourcesList(request) {
+  const response = {
+    jsonrpc: '2.0',
+    id: request.id,
+    result: {
+      resources: []
+    }
   };
   
   process.stdout.write(JSON.stringify(response) + '\n');
@@ -302,9 +336,17 @@ async function processSingleRequest(request) {
  * Send JSON-RPC error response
  */
 function sendError(id, code, message) {
+  // Only send error response if id is defined (not for notifications)
+  // Claude Desktop's Zod schema doesn't accept null for id
+  if (id === undefined || id === null) {
+    // For notifications or parse errors without id, don't send response
+    // or send without id field
+    return;
+  }
+  
   const errorResponse = {
     jsonrpc: '2.0',
-    id: id !== undefined ? id : null,
+    id: id,
     error: {
       code: code,
       message: message

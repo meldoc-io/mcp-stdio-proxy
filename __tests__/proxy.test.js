@@ -40,26 +40,25 @@ describe('meldoc-mcp-proxy', () => {
   });
   
   describe('JSON parsing', () => {
-    it('should return parse error for invalid JSON', (done) => {
+    it('should handle invalid JSON gracefully', (done) => {
       const proxy = spawn('node', [proxyPath], {
         env: process.env
       });
       
       let stdout = '';
+      let stderr = '';
       proxy.stdout.on('data', (data) => {
         stdout += data.toString();
       });
+      proxy.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
       
       proxy.on('close', () => {
-        try {
-          const result = JSON.parse(stdout.trim());
-          expect(result.error).toBeDefined();
-          expect(result.error.code).toBe(-32700);
-          expect(result.error.message).toContain('Parse error');
-          done();
-        } catch (e) {
-          done(e);
-        }
+        // Parse errors without id don't send response to avoid Zod validation errors
+        // But should log to stderr
+        expect(stderr).toContain('Parse error');
+        done();
       });
       
       proxy.stdin.write('invalid json{');
