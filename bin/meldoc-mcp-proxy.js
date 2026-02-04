@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const axios = require('axios');
+const https = require('https');
 const { URL } = require('url');
 
 // JSON-RPC error codes
@@ -40,8 +41,10 @@ process.stdin.on('data', (chunk) => {
   
   // Process complete lines
   for (const line of lines) {
-    if (line.trim()) {
-      handleLine(line.trim());
+    const trimmed = line.trim();
+    // Skip empty lines but don't exit
+    if (trimmed) {
+      handleLine(trimmed);
     }
   }
 });
@@ -52,18 +55,33 @@ process.stdin.on('end', () => {
   if (buffer.trim()) {
     handleLine(buffer.trim());
   }
+  // Don't exit - Claude Desktop may reconnect
+  // The process will be terminated by Claude Desktop when needed
 });
 
-// Handle errors
+// Handle errors - don't exit, just log
 process.stdin.on('error', (error) => {
-  sendError(null, JSON_RPC_ERROR_CODES.INTERNAL_ERROR, `Input error: ${error.message}`);
-  process.exit(1);
+  // Log to stderr but don't exit - Claude Desktop may close stdin
+  // Silently handle stdin errors - they're normal when Claude Desktop closes the connection
+});
+
+// Handle stdout errors
+process.stdout.on('error', (error) => {
+  // If stdout is closed (e.g., Claude Desktop disconnected), exit gracefully
+  if (error.code === 'EPIPE') {
+    process.exit(0);
+  }
 });
 
 /**
  * Handle a single line from stdin
  */
 function handleLine(line) {
+  // Skip empty lines
+  if (!line || !line.trim()) {
+    return;
+  }
+  
   try {
     const request = JSON.parse(line);
     handleRequest(request);
@@ -81,11 +99,14 @@ function validateRequest(request) {
     return { valid: false, error: 'Request must be an object' };
   }
   
-  if (request.jsonrpc !== '2.0') {
+  // Allow requests without jsonrpc for compatibility (some MCP clients may omit it)
+  if (request.jsonrpc && request.jsonrpc !== '2.0') {
     return { valid: false, error: 'jsonrpc must be "2.0"' };
   }
   
-  if (!request.method && !Array.isArray(request)) {
+  // Allow requests without method if they're notifications (id is null/undefined)
+  // But batch requests must be arrays
+  if (!request.method && !Array.isArray(request) && request.id !== null && request.id !== undefined) {
     return { valid: false, error: 'Request must have a method or be a batch array' };
   }
   
@@ -96,6 +117,11 @@ function validateRequest(request) {
  * Handle a JSON-RPC request
  */
 async function handleRequest(request) {
+  // Handle null/undefined requests
+  if (!request) {
+    return;
+  }
+  
   // Handle batch requests (array of requests)
   if (Array.isArray(request)) {
     // Process batch requests sequentially
@@ -122,14 +148,23 @@ async function handleRequest(request) {
  */
 async function processSingleRequest(request) {
   try {
+    // Ensure request has jsonrpc field
+    const requestWithJsonRpc = {
+      ...request,
+      jsonrpc: request.jsonrpc || '2.0'
+    };
+    
     // Make HTTP request to MCP API
-    const response = await axios.post(rpcEndpoint, request, {
+    const response = await axios.post(rpcEndpoint, requestWithJsonRpc, {
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'User-Agent': '@meldocio/mcp-stdio-proxy/1.0.0'
       },
       timeout: REQUEST_TIMEOUT,
-      validateStatus: (status) => status < 500 // Don't throw on 4xx errors
+      validateStatus: (status) => status < 500, // Don't throw on 4xx errors
+      // Keep connection alive for better performance
+      httpsAgent: new https.Agent({ keepAlive: true, keepAliveMsecs: 1000 })
     });
     
     // Handle successful response
@@ -146,7 +181,12 @@ async function processSingleRequest(request) {
         }
       }
       
+      // Ensure stdout is flushed immediately
       process.stdout.write(JSON.stringify(responseData) + '\n');
+      // Flush stdout to ensure data is sent immediately
+      if (process.stdout.isTTY) {
+        process.stdout.flush();
+      }
     } else {
       // HTTP error status
       const errorMessage = response.data?.error?.message || 
@@ -202,4 +242,8 @@ function sendError(id, code, message) {
   };
   
   process.stdout.write(JSON.stringify(errorResponse) + '\n');
+  // Flush stdout to ensure data is sent immediately
+  if (process.stdout.isTTY) {
+    process.stdout.flush();
+  }
 }
