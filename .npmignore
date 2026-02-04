@@ -1,0 +1,11 @@
+__tests__/
+.git/
+.gitignore
+.nvmrc
+.env
+*.log
+coverage/
+.nyc_output
+*.swp
+*.swo
+*~
