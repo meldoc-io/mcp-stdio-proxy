@@ -143,6 +143,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"server_inf
 ```
 
 The response includes:
+
 - Server name (from token)
 - Token description (if provided)
 - Available projects with IDs, names, and aliases
