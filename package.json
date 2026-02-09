@@ -2,16 +2,25 @@
   "name": "@meldocio/mcp-stdio-proxy",
   "version": "1.0.4",
   "description": "MCP stdio proxy for meldoc - connects Claude Desktop to meldoc MCP API",
-  "main": "bin/meldoc-mcp-proxy.js",
   "bin": {
     "meldoc-mcp-proxy": "bin/meldoc-mcp-proxy.js"
   },
+  "files": [
+    "bin/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "test": "jest",
-    "prepublishOnly": "npm test"
-  },
-  "engines": {
-    "node": ">=14.0.0"
+    "prepublishOnly": "npm test",
+    "sync:publish": "node -e \"const pkg=require('./package.json');const pub=require('./package.publish.json');pub.version=pkg.version;require('fs').writeFileSync('./package.publish.json',JSON.stringify(pub,null,2)+'\\n')\"",
+    "version:patch": "npm version patch --no-git-tag-version && npm run sync:publish",
+    "version:minor": "npm version minor --no-git-tag-version && npm run sync:publish",
+    "publish:patch": "npm run version:patch && node scripts/publish.js",
+    "publish:minor": "npm run version:minor && node scripts/publish.js"
   },
   "keywords": [
     "mcp",

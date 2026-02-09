@@ -57,24 +57,6 @@ After adding the configuration, restart Claude Desktop.
 ### Environment Variables
 
 - **MELDOC_MCP_TOKEN** (required): Your meldoc MCP authentication token
-- **MELDOC_API_URL** (optional): Base URL for the meldoc API. Defaults to `https://api.meldoc.io`
-
-Example with custom API URL:
-
-```json
-{
-  "mcpServers": {
-    "meldoc": {
-      "command": "npx",
-      "args": ["-y", "@meldocio/mcp-stdio-proxy"],
-      "env": {
-        "MELDOC_MCP_TOKEN": "your_token_here",
-        "MELDOC_API_URL": "https://custom.api.example.com"
-      }
-    }
-  }
-}
-```
 
 ### Command Line Testing
 
@@ -85,19 +67,10 @@ echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
   MELDOC_MCP_TOKEN=your_token_here npx @meldocio/mcp-stdio-proxy
 ```
 
-Or with a custom API URL:
-
-```bash
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
-  MELDOC_MCP_TOKEN=your_token_here \
-  MELDOC_API_URL=https://custom.api.example.com \
-  npx @meldocio/mcp-stdio-proxy
-```
-
 ## How It Works
 
 1. The proxy reads JSON-RPC requests from `stdin` (newline-delimited JSON)
-2. Each request is forwarded to `https://api.meldoc.io/mcp/v1/rpc` (or custom URL)
+2. Each request is forwarded to `https://api.meldoc.io/mcp/v1/rpc`
 3. The `Authorization: Bearer {token}` header is automatically added
 4. Responses are written to `stdout` in JSON-RPC format
 5. Errors are handled and returned as proper JSON-RPC error responses

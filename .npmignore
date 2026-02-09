@@ -12,3 +12,6 @@ coverage/
 publish.sh
 .npmrc.example
 NPMRC_SETUP.md
+package.publish.json
+scripts/
+package.json.backup
