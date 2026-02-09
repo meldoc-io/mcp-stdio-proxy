@@ -6,17 +6,23 @@ MCP stdio proxy for meldoc - connects Claude Desktop to meldoc MCP API without r
 
 This npm package provides a lightweight proxy that bridges JSON-RPC communication between Claude Desktop and the meldoc MCP API. It reads JSON-RPC requests from stdin and forwards them to the meldoc API over HTTP, then returns the responses via stdout.
 
+The package follows MCP best practices:
+
+- ✅ Pure stdio communication (no interactive prompts)
+- ✅ All logs go to stderr (stdout is clean JSON-RPC only)
+- ✅ No required arguments at startup
+- ✅ Graceful error handling with proper JSON-RPC error codes
+- ✅ Configurable logging levels
+
 ## Installation
 
-The package is designed to be used via `npx`, so no installation is required. However, if you want to install it globally:
+### Using Claude Desktop MCP Command
 
 ```bash
-npm install -g @meldocio/mcp-stdio-proxy
+claude mcp add meldoc npx @meldocio/mcp-stdio-proxy@latest
 ```
 
-## Usage
-
-### Claude Desktop Configuration
+### Manual Configuration
 
 Add the following configuration to your `claude_desktop_config.json` file:
 
@@ -43,9 +49,9 @@ Add the following configuration to your `claude_desktop_config.json` file:
   "mcpServers": {
     "meldoc": {
       "command": "npx",
-      "args": ["-y", "@meldocio/mcp-stdio-proxy"],
+      "args": ["-y", "@meldocio/mcp-stdio-proxy@latest"],
       "env": {
-        "MELDOC_MCP_TOKEN": "your_token_here"
+        "MELDOC_TOKEN": "your_token_here"
       }
     }
   }
@@ -54,41 +60,119 @@ Add the following configuration to your `claude_desktop_config.json` file:
 
 After adding the configuration, restart Claude Desktop.
 
+## Authentication
+
+Meldoc MCP requires an access token. The token is checked in this order:
+
+1. `MELDOC_TOKEN` environment variable (recommended)
+2. `MELDOC_MCP_TOKEN` environment variable (backward compatibility)
+3. `~/.meldoc/config.json` file
+4. If none found, tools will return an authentication error
+
+### Option 1: Environment variable (recommended)
+
+Set the token as an environment variable:
+
+```bash
+export MELDOC_TOKEN=your_token_here
+```
+
+For permanent setup (macOS/Linux):
+
+```bash
+echo 'export MELDOC_TOKEN=your_token_here' >> ~/.zshrc  # or ~/.bashrc
+source ~/.zshrc
+```
+
+For Claude Desktop, add it to your configuration:
+
+```json
+{
+  "mcpServers": {
+    "meldoc": {
+      "command": "npx",
+      "args": ["-y", "@meldocio/mcp-stdio-proxy@latest"],
+      "env": {
+        "MELDOC_TOKEN": "your_token_here"
+      }
+    }
+  }
+}
+```
+
+### Option 2: Meldoc CLI
+
+If you have the Meldoc CLI installed, run:
+
+```bash
+meldoc auth login
+```
+
+This will store the token in `~/.meldoc/config.json`, which the MCP proxy will automatically use.
+
+### Option 3: Manual config file
+
+Create `~/.meldoc/config.json` manually:
+
+```json
+{
+  "token": "your_token_here"
+}
+```
+
 ### Environment Variables
 
-- **MELDOC_MCP_TOKEN** (required): Your meldoc MCP authentication token
+- **MELDOC_TOKEN** (recommended): Your meldoc authentication token
+- **MELDOC_MCP_TOKEN** (optional): Alternative token variable (for backward compatibility)
+- **LOG_LEVEL** (optional): Logging level - `ERROR`, `WARN`, `INFO`, or `DEBUG` (default: `ERROR`)
 
 ### Command Line Testing
 
 You can test the proxy directly from the command line:
 
 ```bash
+# Test initialize (works without token)
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}' | \
+  npx @meldocio/mcp-stdio-proxy@latest
+
+# Test tools/list (requires token)
 echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
-  MELDOC_MCP_TOKEN=your_token_here npx @meldocio/mcp-stdio-proxy
+  MELDOC_TOKEN=your_token_here npx @meldocio/mcp-stdio-proxy@latest
+
+# Test with debug logging
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
+  MELDOC_TOKEN=your_token_here LOG_LEVEL=DEBUG npx @meldocio/mcp-stdio-proxy@latest
 ```
 
 ## How It Works
 
 1. The proxy reads JSON-RPC requests from `stdin` (newline-delimited JSON)
-2. Each request is forwarded to `https://api.meldoc.io/mcp/v1/rpc`
-3. The `Authorization: Bearer {token}` header is automatically added
-4. Responses are written to `stdout` in JSON-RPC format
-5. Errors are handled and returned as proper JSON-RPC error responses
+2. Protocol methods (`initialize`, `ping`, `resources/list`) are handled locally
+3. Tool requests are forwarded to `https://api.meldoc.io/mcp/v1/rpc`
+4. The `Authorization: Bearer {token}` header is automatically added
+5. Responses are written to `stdout` in JSON-RPC format (stdout is clean - only JSON-RPC)
+6. All logs and diagnostics go to `stderr`
+7. Errors are handled and returned as proper JSON-RPC error responses
 
 ### Supported Features
 
 - ✅ JSON-RPC 2.0 protocol
 - ✅ Single and batch requests
 - ✅ Proper error handling with JSON-RPC error codes
+- ✅ Custom error codes: `AUTH_REQUIRED`, `NOT_FOUND`, `RATE_LIMIT`
 - ✅ Request timeout handling (25 seconds)
 - ✅ Network error recovery
 - ✅ Line-by-line processing for streaming
 - ✅ Automatic support for all MCP tools (including `server_info`)
-- ✅ Metadata (`_meta`) in responses for better context
+- ✅ Configurable logging levels (ERROR, WARN, INFO, DEBUG)
+- ✅ Graceful shutdown on SIGINT/SIGTERM
+- ✅ No required arguments at startup
 
 ## JSON-RPC Error Codes
 
-The proxy uses standard JSON-RPC 2.0 error codes:
+The proxy uses standard JSON-RPC 2.0 error codes plus custom codes:
+
+### Standard JSON-RPC 2.0 Codes
 
 - `-32700`: Parse error (invalid JSON)
 - `-32600`: Invalid Request (malformed JSON-RPC)
@@ -96,6 +180,18 @@ The proxy uses standard JSON-RPC 2.0 error codes:
 - `-32602`: Invalid params
 - `-32603`: Internal error (network errors, timeouts, etc.)
 - `-32000`: Server error (HTTP 4xx/5xx responses)
+
+### Custom Error Codes
+
+- `-32001`: Authentication required (`AUTH_REQUIRED`) - Token missing or invalid
+- `-32002`: Not found (`NOT_FOUND`) - Resource not found
+- `-32003`: Rate limit exceeded (`RATE_LIMIT`) - Too many requests
+
+Error responses include:
+
+- `code`: Error code
+- `message`: Human-readable error message
+- `data` (optional, DEBUG level only): Additional error details
 
 ## Available Tools
 
@@ -143,9 +239,9 @@ This metadata helps AI assistants understand the context and limitations of the 
 
 ## Troubleshooting
 
-### Error: MELDOC_MCP_TOKEN environment variable is required
+### Error: AUTH_REQUIRED - Meldoc token not found
 
-**Solution:** Make sure you've set the `MELDOC_MCP_TOKEN` in the `env` section of your Claude Desktop configuration.
+**Solution:** Set the `MELDOC_TOKEN` environment variable or run `meldoc auth login` to store the token in `~/.meldoc/config.json`. The token is checked when tools are called, not at startup.
 
 ### Connection timeout
 
@@ -176,15 +272,19 @@ curl https://api.meldoc.io/mcp/v1/rpc \
 To debug issues, you can test the proxy directly:
 
 ```bash
+# Test initialize (works without token)
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}' | \
+  npx @meldocio/mcp-stdio-proxy@latest
+
 # Test with a simple request
 echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
-  MELDOC_MCP_TOKEN=your_token npx @meldocio/mcp-stdio-proxy
+  MELDOC_TOKEN=your_token npx @meldocio/mcp-stdio-proxy@latest
 
-# Test with verbose output (if needed)
+# Test with debug logging
 echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
-  MELDOC_MCP_TOKEN=your_token \
-  DEBUG=1 \
-  npx @meldocio/mcp-stdio-proxy
+  MELDOC_TOKEN=your_token \
+  LOG_LEVEL=DEBUG \
+  npx @meldocio/mcp-stdio-proxy@latest
 ```
 
 ## Development
@@ -220,8 +320,8 @@ npm publish --access public
 
 ## Requirements
 
-- Node.js >= 14.0.0
-- Valid meldoc MCP token
+- Node.js >= 18.0.0
+- Valid meldoc MCP token (required for tool calls, not for startup)
 
 ## License
 

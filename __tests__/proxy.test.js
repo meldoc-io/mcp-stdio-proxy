@@ -18,24 +18,90 @@ describe('meldoc-mcp-proxy', () => {
   });
   
   describe('Environment validation', () => {
-    it('should exit with error if MELDOC_MCP_TOKEN is missing', (done) => {
+    it('should start without token (token checked on tool calls)', (done) => {
       delete process.env.MELDOC_MCP_TOKEN;
       
       const proxy = spawn('node', [proxyPath]);
-      let stderr = '';
+      let stdout = '';
       
-      proxy.stderr.on('data', (data) => {
-        stderr += data.toString();
+      proxy.stdout.on('data', (data) => {
+        stdout += data.toString();
       });
       
-      proxy.on('close', (code) => {
-        expect(code).not.toBe(0);
-        expect(stderr).toContain('MELDOC_MCP_TOKEN');
-        done();
+      // Send initialize request - should work without token
+      const initRequest = {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2025-06-18',
+          capabilities: {},
+          clientInfo: { name: 'test', version: '1.0.0' }
+        }
+      };
+      
+      proxy.on('close', () => {
+        try {
+          const result = JSON.parse(stdout.trim());
+          expect(result.result).toBeDefined();
+          expect(result.result.serverInfo.name).toBe('@meldocio/mcp-stdio-proxy');
+          done();
+        } catch (e) {
+          done(e);
+        }
       });
       
-      // Send empty input to trigger validation
+      proxy.stdin.write(JSON.stringify(initRequest) + '\n');
       proxy.stdin.end();
+      
+      setTimeout(() => {
+        if (stdout) {
+          proxy.kill();
+        } else {
+          done(new Error('No response received'));
+        }
+      }, 2000);
+    });
+    
+    it('should return AUTH_REQUIRED error when calling tool without token', (done) => {
+      delete process.env.MELDOC_MCP_TOKEN;
+      
+      const proxy = spawn('node', [proxyPath]);
+      let stdout = '';
+      
+      proxy.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+      
+      // Send tools/list request - should return AUTH_REQUIRED
+      const toolRequest = {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/list'
+      };
+      
+      proxy.on('close', () => {
+        try {
+          const result = JSON.parse(stdout.trim());
+          expect(result.error).toBeDefined();
+          expect(result.error.code).toBe(-32001); // AUTH_REQUIRED
+          expect(result.error.message).toContain('MELDOC_MCP_TOKEN');
+          done();
+        } catch (e) {
+          done(e);
+        }
+      });
+      
+      proxy.stdin.write(JSON.stringify(toolRequest) + '\n');
+      proxy.stdin.end();
+      
+      setTimeout(() => {
+        if (stdout) {
+          proxy.kill();
+        } else {
+          done(new Error('No response received'));
+        }
+      }, 2000);
     });
   });
   
@@ -58,6 +124,8 @@ describe('meldoc-mcp-proxy', () => {
         // Parse errors without id don't send response to avoid Zod validation errors
         // But should log to stderr
         expect(stderr).toContain('Parse error');
+        // stdout should be empty for parse errors without id
+        expect(stdout.trim()).toBe('');
         done();
       });
       
@@ -88,6 +156,96 @@ describe('meldoc-mcp-proxy', () => {
       
       proxy.stdin.write('{"jsonrpc":"1.0","id":1}');
       proxy.stdin.end();
+    });
+  });
+  
+  describe('MCP Protocol Methods', () => {
+    it('should handle initialize request', (done) => {
+      const proxy = spawn('node', [proxyPath], {
+        env: process.env
+      });
+      
+      let stdout = '';
+      proxy.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+      
+      const initRequest = {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2025-06-18',
+          capabilities: {},
+          clientInfo: { name: 'test', version: '1.0.0' }
+        }
+      };
+      
+      proxy.on('close', () => {
+        try {
+          const result = JSON.parse(stdout.trim());
+          expect(result.jsonrpc).toBe('2.0');
+          expect(result.id).toBe(1);
+          expect(result.result).toBeDefined();
+          expect(result.result.protocolVersion).toBe('2025-06-18');
+          expect(result.result.serverInfo.name).toBe('@meldocio/mcp-stdio-proxy');
+          expect(result.result.serverInfo.version).toBeDefined();
+          done();
+        } catch (e) {
+          done(e);
+        }
+      });
+      
+      proxy.stdin.write(JSON.stringify(initRequest) + '\n');
+      proxy.stdin.end();
+      
+      setTimeout(() => {
+        if (stdout) {
+          proxy.kill();
+        } else {
+          done(new Error('No response received'));
+        }
+      }, 2000);
+    });
+    
+    it('should handle ping request', (done) => {
+      const proxy = spawn('node', [proxyPath], {
+        env: process.env
+      });
+      
+      let stdout = '';
+      proxy.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+      
+      const pingRequest = {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'ping'
+      };
+      
+      proxy.on('close', () => {
+        try {
+          const result = JSON.parse(stdout.trim());
+          expect(result.jsonrpc).toBe('2.0');
+          expect(result.id).toBe(1);
+          expect(result.result).toBeDefined();
+          done();
+        } catch (e) {
+          done(e);
+        }
+      });
+      
+      proxy.stdin.write(JSON.stringify(pingRequest) + '\n');
+      proxy.stdin.end();
+      
+      setTimeout(() => {
+        if (stdout) {
+          proxy.kill();
+        } else {
+          done(new Error('No response received'));
+        }
+      }, 2000);
     });
   });
   
@@ -157,20 +315,46 @@ describe('meldoc-mcp-proxy', () => {
         env: process.env
       });
       
-      // Just check it doesn't crash on startup
-      proxy.on('close', (code) => {
-        // Should not exit immediately (only on missing token)
-        // If it exits with 0 or 1, that's fine - means it started
-        done();
+      // Should start without token now
+      let stdout = '';
+      proxy.stdout.on('data', (data) => {
+        stdout += data.toString();
       });
       
+      // Send initialize to verify it works
+      const initRequest = {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2025-06-18',
+          capabilities: {},
+          clientInfo: { name: 'test', version: '1.0.0' }
+        }
+      };
+      
+      proxy.on('close', () => {
+        try {
+          if (stdout) {
+            const result = JSON.parse(stdout.trim());
+            expect(result.result).toBeDefined();
+          }
+          done();
+        } catch (e) {
+          done(e);
+        }
+      });
+      
+      proxy.stdin.write(JSON.stringify(initRequest) + '\n');
       proxy.stdin.end();
       
       // Timeout
       setTimeout(() => {
         proxy.kill();
-        done();
-      }, 1000);
+        if (!stdout) {
+          done(new Error('No response received'));
+        }
+      }, 2000);
     });
     
     it('should use custom MELDOC_API_URL when provided', (done) => {
@@ -181,17 +365,44 @@ describe('meldoc-mcp-proxy', () => {
         env: process.env
       });
       
-      // Just check it doesn't crash
-      proxy.on('close', () => {
-        done();
+      // Should start and respond to initialize
+      let stdout = '';
+      proxy.stdout.on('data', (data) => {
+        stdout += data.toString();
       });
       
+      const initRequest = {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2025-06-18',
+          capabilities: {},
+          clientInfo: { name: 'test', version: '1.0.0' }
+        }
+      };
+      
+      proxy.on('close', () => {
+        try {
+          if (stdout) {
+            const result = JSON.parse(stdout.trim());
+            expect(result.result).toBeDefined();
+          }
+          done();
+        } catch (e) {
+          done(e);
+        }
+      });
+      
+      proxy.stdin.write(JSON.stringify(initRequest) + '\n');
       proxy.stdin.end();
       
       setTimeout(() => {
         proxy.kill();
-        done();
-      }, 1000);
+        if (!stdout) {
+          done(new Error('No response received'));
+        }
+      }, 2000);
     });
   });
 });

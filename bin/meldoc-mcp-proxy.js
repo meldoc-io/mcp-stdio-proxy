@@ -3,6 +3,26 @@
 const axios = require('axios');
 const https = require('https');
 const { URL } = require('url');
+const path = require('path');
+const fs = require('fs');
+
+// Get package info - try multiple paths for different installation scenarios
+let pkg;
+try {
+  // Try relative path first (development)
+  pkg = require('../package.json');
+} catch (e) {
+  try {
+    // Try from node_modules (when installed)
+    pkg = require(path.join(__dirname, '../../package.json'));
+  } catch (e2) {
+    // Fallback to hardcoded values
+    pkg = {
+      name: '@meldocio/mcp-stdio-proxy',
+      version: '1.0.5'
+    };
+  }
+}
 
 // JSON-RPC error codes
 const JSON_RPC_ERROR_CODES = {
@@ -14,16 +34,73 @@ const JSON_RPC_ERROR_CODES = {
   SERVER_ERROR: -32000
 };
 
+// Custom error codes
+const CUSTOM_ERROR_CODES = {
+  AUTH_REQUIRED: -32001,
+  NOT_FOUND: -32002,
+  RATE_LIMIT: -32003
+};
+
+// Log levels
+const LOG_LEVELS = {
+  ERROR: 0,
+  WARN: 1,
+  INFO: 2,
+  DEBUG: 3
+};
+
+// Get token from environment or config file
+// Priority: 1) MELDOC_TOKEN env var, 2) ~/.meldoc/config.json
+function getToken() {
+  // First, try environment variable (recommended)
+  if (process.env.MELDOC_TOKEN) {
+    return process.env.MELDOC_TOKEN;
+  }
+  
+  // Fallback: try MELDOC_MCP_TOKEN for backward compatibility
+  if (process.env.MELDOC_MCP_TOKEN) {
+    return process.env.MELDOC_MCP_TOKEN;
+  }
+  
+  // Then, try config file
+  try {
+    const os = require('os');
+    const configPath = path.join(os.homedir(), '.meldoc', 'config.json');
+    if (fs.existsSync(configPath)) {
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      if (config.token) {
+        return config.token;
+      }
+    }
+  } catch (e) {
+    // Silently ignore config file errors
+  }
+  
+  return null;
+}
+
 // Configuration
-const token = process.env.MELDOC_MCP_TOKEN;
+const token = getToken();
 const apiUrl = process.env.MELDOC_API_URL || 'https://api.meldoc.io';
 const rpcEndpoint = `${apiUrl}/mcp/v1/rpc`;
 const REQUEST_TIMEOUT = 25000; // 25 seconds (less than Claude Desktop's 30s timeout)
+const LOG_LEVEL = getLogLevel(process.env.LOG_LEVEL || 'ERROR');
 
-// Validate token
-if (!token) {
-  console.error('Error: MELDOC_MCP_TOKEN environment variable is required');
-  process.exit(1);
+// Get log level from environment
+function getLogLevel(level) {
+  const upper = (level || '').toUpperCase();
+  return LOG_LEVELS[upper] !== undefined ? LOG_LEVELS[upper] : LOG_LEVELS.ERROR;
+}
+
+// Logging function - all logs go to stderr
+function log(level, message, ...args) {
+  if (LOG_LEVEL >= level) {
+    const prefix = `[${Object.keys(LOG_LEVELS)[level]}]`;
+    process.stderr.write(`${prefix} ${message}\n`);
+    if (args.length > 0 && LOG_LEVEL >= LOG_LEVELS.DEBUG) {
+      process.stderr.write(JSON.stringify(args, null, 2) + '\n');
+    }
+  }
 }
 
 // Buffer for incomplete lines
@@ -73,6 +150,23 @@ process.stdout.on('error', (error) => {
   }
 });
 
+// Handle SIGINT/SIGTERM for graceful shutdown
+let isShuttingDown = false;
+function gracefulShutdown(signal) {
+  if (isShuttingDown) {
+    return;
+  }
+  isShuttingDown = true;
+  log(LOG_LEVELS.INFO, `Received ${signal}, shutting down gracefully...`);
+  // Give a moment for any pending requests to complete
+  setTimeout(() => {
+    process.exit(0);
+  }, 100);
+}
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+
 /**
  * Handle a single line from stdin
  */
@@ -90,7 +184,7 @@ function handleLine(line) {
     // For parse errors, we can't reliably get the id, so we skip the response
     // to avoid Zod validation errors in Claude Desktop (it doesn't accept id: null)
     // This is acceptable per JSON-RPC spec - parse errors can be ignored if id is unknown
-    console.error(`Parse error: ${parseError.message}`, { to: 'stderr' });
+    log(LOG_LEVELS.ERROR, `Parse error: ${parseError.message}`);
   }
 }
 
@@ -199,12 +293,13 @@ function handleInitialize(request) {
         resources: {}
       },
       serverInfo: {
-        name: '@meldocio/mcp-stdio-proxy',
-        version: '1.0.2'
+        name: pkg.name,
+        version: pkg.version
       }
     }
   };
   
+  log(LOG_LEVELS.DEBUG, 'Initialize request received');
   process.stdout.write(JSON.stringify(response) + '\n');
   if (process.stdout.isTTY) {
     process.stdout.flush();
@@ -251,6 +346,13 @@ function handleResourcesList(request) {
  * Forwards the request to the backend MCP API
  */
 async function processSingleRequest(request) {
+  // Check token before making request
+  if (!token) {
+    sendError(request.id, CUSTOM_ERROR_CODES.AUTH_REQUIRED, 
+              'Meldoc token not found. Set MELDOC_TOKEN environment variable or run: meldoc auth login');
+    return;
+  }
+  
   try {
     // Ensure request has jsonrpc field
     const requestWithJsonRpc = {
@@ -258,12 +360,14 @@ async function processSingleRequest(request) {
       jsonrpc: request.jsonrpc || '2.0'
     };
     
+    log(LOG_LEVELS.DEBUG, `Forwarding request: ${request.method || 'unknown'}`);
+    
     // Make HTTP request to MCP API
     const response = await axios.post(rpcEndpoint, requestWithJsonRpc, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
-        'User-Agent': '@meldocio/mcp-stdio-proxy/1.0.0'
+        'User-Agent': `${pkg.name}/${pkg.version}`
       },
       timeout: REQUEST_TIMEOUT,
       validateStatus: (status) => status < 500, // Don't throw on 4xx errors
@@ -310,24 +414,39 @@ async function processSingleRequest(request) {
       
       let errorCode = JSON_RPC_ERROR_CODES.SERVER_ERROR;
       if (status === 401) {
-        errorCode = JSON_RPC_ERROR_CODES.INTERNAL_ERROR;
+        errorCode = CUSTOM_ERROR_CODES.AUTH_REQUIRED;
       } else if (status === 404) {
-        errorCode = JSON_RPC_ERROR_CODES.METHOD_NOT_FOUND;
+        errorCode = CUSTOM_ERROR_CODES.NOT_FOUND;
+      } else if (status === 429) {
+        errorCode = CUSTOM_ERROR_CODES.RATE_LIMIT;
       }
       
-      sendError(request.id, errorCode, errorMessage);
+      log(LOG_LEVELS.WARN, `HTTP error ${status}: ${errorMessage}`);
+      sendError(request.id, errorCode, errorMessage, {
+        status,
+        code: errorData?.error?.code || `HTTP_${status}`
+      });
     } else if (error.request) {
       // Request was made but no response received
+      log(LOG_LEVELS.ERROR, `Network error: ${error.message || 'No response from server'}`);
       sendError(request.id, JSON_RPC_ERROR_CODES.INTERNAL_ERROR, 
-                `Network error: ${error.message || 'No response from server'}`);
+                `Network error: ${error.message || 'No response from server'}`, {
+                  code: 'NETWORK_ERROR'
+                });
     } else if (error.code === 'ECONNABORTED') {
       // Timeout
+      log(LOG_LEVELS.WARN, `Request timeout after ${REQUEST_TIMEOUT}ms`);
       sendError(request.id, JSON_RPC_ERROR_CODES.INTERNAL_ERROR, 
-                `Request timeout after ${REQUEST_TIMEOUT}ms`);
+                `Request timeout after ${REQUEST_TIMEOUT}ms`, {
+                  code: 'TIMEOUT'
+                });
     } else {
       // Other errors
+      log(LOG_LEVELS.ERROR, `Internal error: ${error.message || 'Unknown error'}`);
       sendError(request.id, JSON_RPC_ERROR_CODES.INTERNAL_ERROR, 
-                `Internal error: ${error.message || 'Unknown error'}`);
+                `Internal error: ${error.message || 'Unknown error'}`, {
+                  code: 'INTERNAL_ERROR'
+                });
     }
   }
 }
@@ -335,7 +454,7 @@ async function processSingleRequest(request) {
 /**
  * Send JSON-RPC error response
  */
-function sendError(id, code, message) {
+function sendError(id, code, message, details) {
   // Only send error response if id is defined (not for notifications)
   // Claude Desktop's Zod schema doesn't accept null for id
   if (id === undefined || id === null) {
@@ -352,6 +471,11 @@ function sendError(id, code, message) {
       message: message
     }
   };
+  
+  // Add details if provided (for debugging)
+  if (details && LOG_LEVEL >= LOG_LEVELS.DEBUG) {
+    errorResponse.error.data = details;
+  }
   
   process.stdout.write(JSON.stringify(errorResponse) + '\n');
   // Flush stdout to ensure data is sent immediately
