@@ -7,6 +7,7 @@
   },
   "files": [
     "bin/**",
+    "lib/**",
     "README.md",
     "LICENSE"
   ],
@@ -15,6 +16,8 @@
   },
   "scripts": {
     "test": "jest",
+    "test:local": "MELDOC_API_URL=http://localhost:8080 MELDOC_APP_URL=http://localhost:4200 jest",
+    "test:watch": "jest --watch",
     "prepublishOnly": "npm test",
     "sync:publish": "node -e \"const pkg=require('./package.json');const pub=require('./package.publish.json');pub.version=pkg.version;require('fs').writeFileSync('./package.publish.json',JSON.stringify(pub,null,2)+'\\n')\"",
     "version:patch": "npm version patch --no-git-tag-version && npm run sync:publish",
@@ -41,7 +44,9 @@
   },
   "homepage": "https://github.com/meldoc/mcp-stdio-proxy#readme",
   "dependencies": {
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "chalk": "^4.1.2",
+    "js-yaml": "^4.1.1"
   },
   "devDependencies": {
     "jest": "^29.7.0"
@@ -52,7 +57,9 @@
       "**/__tests__/**/*.test.js"
     ],
     "collectCoverageFrom": [
-      "bin/**/*.js"
-    ]
+      "bin/**/*.js",
+      "lib/**/*.js"
+    ],
+    "testTimeout": 10000
   }
 }

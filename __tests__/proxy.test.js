@@ -85,7 +85,7 @@ describe('meldoc-mcp-proxy', () => {
           const result = JSON.parse(stdout.trim());
           expect(result.error).toBeDefined();
           expect(result.error.code).toBe(-32001); // AUTH_REQUIRED
-          expect(result.error.message).toContain('MELDOC_MCP_TOKEN');
+          expect(result.error.message).toContain('MELDOC_ACCESS_TOKEN');
           done();
         } catch (e) {
           done(e);
