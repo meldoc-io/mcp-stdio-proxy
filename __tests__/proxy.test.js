@@ -63,7 +63,7 @@ describe('meldoc-mcp-proxy', () => {
       }, 2000);
     });
     
-    it('should return AUTH_REQUIRED error when calling tool without token', (done) => {
+    it('should return tools list without token (tools/list does not require auth)', (done) => {
       delete process.env.MELDOC_MCP_TOKEN;
       
       const proxy = spawn('node', [proxyPath]);
@@ -73,7 +73,7 @@ describe('meldoc-mcp-proxy', () => {
         stdout += data.toString();
       });
       
-      // Send tools/list request - should return AUTH_REQUIRED
+      // Send tools/list request - should work without token
       const toolRequest = {
         jsonrpc: '2.0',
         id: 1,
@@ -83,9 +83,10 @@ describe('meldoc-mcp-proxy', () => {
       proxy.on('close', () => {
         try {
           const result = JSON.parse(stdout.trim());
-          expect(result.error).toBeDefined();
-          expect(result.error.code).toBe(-32001); // AUTH_REQUIRED
-          expect(result.error.message).toContain('MELDOC_ACCESS_TOKEN');
+          expect(result.result).toBeDefined();
+          expect(result.result.tools).toBeDefined();
+          expect(Array.isArray(result.result.tools)).toBe(true);
+          expect(result.result.tools.length).toBeGreaterThan(0);
           done();
         } catch (e) {
           done(e);
