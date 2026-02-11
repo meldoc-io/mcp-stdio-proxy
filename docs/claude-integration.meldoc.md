@@ -1,5 +1,7 @@
-# Claude Desktop Integration
-
+---
+alias: claude-integration
+title: Claude Desktop Integration
+---
 Once configured, Claude Desktop gains access to powerful Meldoc capabilities through MCP tools.
 
 ## Available MCP Tools

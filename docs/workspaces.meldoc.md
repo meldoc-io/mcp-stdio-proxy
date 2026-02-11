@@ -1,5 +1,7 @@
-# Workspace Management
-
+---
+alias: workspaces
+title: Workspace Management
+---
 Workspaces are organizational units in Meldoc. If you have multiple workspaces, you need to specify which one to use.
 
 ## Understanding Workspace Selection

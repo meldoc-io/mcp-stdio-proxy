@@ -1,5 +1,7 @@
-# Advanced Usage
-
+---
+alias: advanced
+title: Advanced Usage
+---
 Configuration files, environment variables, and best practices for advanced users.
 
 ## Configuration Files

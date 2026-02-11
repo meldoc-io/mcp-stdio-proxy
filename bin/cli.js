@@ -265,7 +265,7 @@ function showUsageHints() {
 /**
  * Main CLI handler
  */
-function main() {
+async function main() {
   const args = process.argv.slice(2);
   
   if (args.length === 0) {
@@ -282,9 +282,9 @@ function main() {
     handleHelp();
   } else if (command === 'auth') {
     if (subcommand === 'login') {
-      handleAuthLogin();
+      await handleAuthLogin();
     } else if (subcommand === 'status') {
-      handleAuthStatus();
+      await handleAuthStatus();
     } else if (subcommand === 'logout') {
       handleAuthLogout();
     } else {
@@ -299,7 +299,7 @@ function main() {
     } else if (subcommand === 'get-workspace') {
       handleConfigGetWorkspace();
     } else if (subcommand === 'list-workspaces') {
-      handleConfigListWorkspaces();
+      await handleConfigListWorkspaces();
     } else {
       logger.error(`Unknown config command: ${subcommand}`);
       console.log('\n' + logger.label('Usage:'));
@@ -315,7 +315,10 @@ function main() {
 
 // Run main when this file is required (called from main proxy)
 // main() will handle commands and exit, so this is safe to call
-main();
+main().catch((error) => {
+  logger.error(`Unexpected error: ${error.message}`);
+  process.exit(1);
+});
 
 module.exports = {
   handleAuthLogin,

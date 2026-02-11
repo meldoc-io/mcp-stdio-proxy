@@ -1,5 +1,7 @@
-# Getting Started
-
+---
+alias: getting-started
+title: Getting Started
+---
 Get up and running with Meldoc MCP in 4 simple steps!
 
 ## Step 1: Configure Claude Desktop

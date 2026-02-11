@@ -1,5 +1,7 @@
-# Troubleshooting
-
+---
+alias: troubleshooting
+title: Troubleshooting
+---
 Common issues and their solutions.
 
 ## Error: "AUTH_REQUIRED" - Token Not Found

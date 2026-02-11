@@ -12,8 +12,8 @@ const args = process.argv.slice(2);
 if (args.length > 0 && (args[0] === 'auth' || args[0] === 'config')) {
   // Handle CLI commands - cli.js will handle and exit
   require('./cli');
-  // cli.js should have exited, but if not, exit here
-  process.exit(0);
+  // Don't exit here - cli.js will handle process.exit() after async operations complete
+  return;
 }
 
 // Get package info - try multiple paths for different installation scenarios

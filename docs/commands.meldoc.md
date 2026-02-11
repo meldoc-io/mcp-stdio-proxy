@@ -1,5 +1,7 @@
-# Commands Reference
-
+---
+alias: commands
+title: Commands Reference
+---
 Complete reference for all CLI commands available in Meldoc MCP.
 
 ## Authentication Commands

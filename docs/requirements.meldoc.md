@@ -1,5 +1,7 @@
-# Requirements
-
+---
+alias: requirements
+title: Requirements
+---
 System and account requirements for Meldoc MCP.
 
 ## System Requirements

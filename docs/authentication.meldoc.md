@@ -1,5 +1,7 @@
-# Authentication
-
+---
+alias: authentication
+title: Authentication
+---
 Authentication is required for Claude to access your Meldoc account. The tool provides multiple authentication methods.
 
 ## Method 1: Interactive Login (Recommended) ✨

@@ -1,5 +1,7 @@
-# Meldoc MCP Documentation
-
+---
+alias: introduction
+title: Meldoc MCP
+---
 **Meldoc MCP** is a powerful bridge that connects Claude Desktop to your Meldoc account, enabling seamless access to your documentation directly within Claude conversations.
 
 ## Overview
