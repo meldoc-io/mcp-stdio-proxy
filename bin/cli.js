@@ -219,10 +219,78 @@ function getClaudeDesktopConfigPath() {
 }
 
 /**
- * Get expected Meldoc MCP configuration
+ * Get Cursor config file path (project-specific)
+ */
+function getCursorProjectConfigPath() {
+  const cwd = process.cwd();
+  return path.join(cwd, '.cursor', 'mcp.json');
+}
+
+/**
+ * Get Cursor global config file path
+ */
+function getCursorGlobalConfigPath() {
+  const homeDir = os.homedir();
+  return path.join(homeDir, '.cursor', 'mcp.json');
+}
+
+/**
+ * Get local mcp.json path (in current directory)
+ */
+function getLocalMcpJsonPath() {
+  return path.join(process.cwd(), 'mcp.json');
+}
+
+/**
+ * Get Claude Code project config path (.mcp.json)
+ */
+function getClaudeCodeProjectConfigPath() {
+  return path.join(process.cwd(), '.mcp.json');
+}
+
+/**
+ * Get Claude Code user config path (~/.claude.json)
+ */
+function getClaudeCodeUserConfigPath() {
+  return path.join(os.homedir(), '.claude.json');
+}
+
+/**
+ * Get Claude Code local config path (~/.claude.json in project path)
+ * Note: Local scope uses ~/.claude.json but stores project-specific paths
+ */
+function getClaudeCodeLocalConfigPath() {
+  // For local scope, Claude Code uses ~/.claude.json with project-specific paths
+  // This is the same file as user scope, but with different path context
+  return path.join(os.homedir(), '.claude.json');
+}
+
+/**
+ * Get expected Meldoc MCP configuration for Claude Desktop
  */
 function getExpectedMeldocConfig() {
   return {
+    command: 'npx',
+    args: ['-y', '@meldocio/mcp-stdio-proxy@latest']
+  };
+}
+
+/**
+ * Get expected Meldoc MCP configuration for Cursor (stdio)
+ */
+function getExpectedMeldocConfigForCursor() {
+  return {
+    command: 'npx',
+    args: ['-y', '@meldocio/mcp-stdio-proxy@latest']
+  };
+}
+
+/**
+ * Get expected Meldoc MCP configuration for Claude Code (stdio)
+ */
+function getExpectedMeldocConfigForClaudeCode() {
+  return {
+    type: 'stdio',
     command: 'npx',
     args: ['-y', '@meldocio/mcp-stdio-proxy@latest']
   };
@@ -240,9 +308,27 @@ function configsEqual(config1, config2) {
 }
 
 /**
- * Handle install command - automatically configure Claude Desktop
+ * Merge MCP server configurations (preserve existing, add new)
  */
-function handleInstall() {
+function mergeMcpServers(existing, newServer) {
+  const merged = { ...existing };
+  if (!merged.meldoc) {
+    merged.meldoc = newServer;
+  } else {
+    // Check if it's the same config
+    if (configsEqual(merged.meldoc, newServer)) {
+      return { merged, changed: false };
+    }
+    // Update if different
+    merged.meldoc = newServer;
+  }
+  return { merged, changed: true };
+}
+
+/**
+ * Install for Claude Desktop
+ */
+function installClaudeDesktop() {
   try {
     logger.section('🚀 Installing Meldoc MCP for Claude Desktop');
     console.log();
@@ -371,6 +457,447 @@ function handleInstall() {
 }
 
 /**
+ * Install for Cursor (project or global)
+ */
+function installCursor(isGlobal = false) {
+  try {
+    const configPath = isGlobal ? getCursorGlobalConfigPath() : getCursorProjectConfigPath();
+    const configDir = path.dirname(configPath);
+    const expectedConfig = getExpectedMeldocConfigForCursor();
+    
+    logger.section(`🚀 Installing Meldoc MCP for Cursor (${isGlobal ? 'global' : 'project'})`);
+    console.log();
+    
+    logger.info(`Config file location: ${logger.highlight(configPath)}`);
+    console.log();
+    
+    // Read existing config or create new one
+    let config = {};
+    let configExists = false;
+    
+    if (fs.existsSync(configPath)) {
+      try {
+        const content = fs.readFileSync(configPath, 'utf8');
+        config = JSON.parse(content);
+        configExists = true;
+        logger.info('Found existing Cursor MCP configuration');
+      } catch (error) {
+        logger.warn(`Failed to parse existing config: ${error.message}`);
+        logger.info('Will create a new configuration file');
+      }
+    } else {
+      logger.info('Configuration file does not exist, will create it');
+    }
+    
+    // Ensure mcpServers object exists
+    if (!config.mcpServers) {
+      config.mcpServers = {};
+    }
+    
+    // Check if meldoc is already configured
+    if (config.mcpServers.meldoc) {
+      const existingConfig = config.mcpServers.meldoc;
+      const isEqual = configsEqual(existingConfig, expectedConfig);
+      
+      if (isEqual) {
+        logger.success('Meldoc MCP is already configured correctly!');
+        console.log();
+        logger.info('Current configuration:');
+        console.log('  ' + logger.highlight(JSON.stringify(existingConfig, null, 2)));
+        console.log();
+        logger.info('No changes needed. Next steps:');
+        console.log('  1. Restart Cursor (if you haven\'t already)');
+        console.log('  2. Run: ' + logger.highlight('npx @meldocio/mcp-stdio-proxy auth login'));
+        console.log();
+        process.exit(0);
+      } else {
+        logger.warn('Meldoc MCP is already configured, but with different settings');
+        console.log();
+        logger.info('Current configuration:');
+        console.log('  ' + logger.highlight(JSON.stringify(existingConfig, null, 2)));
+        console.log();
+        logger.info('Expected configuration:');
+        console.log('  ' + logger.highlight(JSON.stringify(expectedConfig, null, 2)));
+        console.log();
+        logger.info('To update the configuration, run:');
+        console.log('  ' + logger.highlight('npx @meldocio/mcp-stdio-proxy install cursor'));
+        console.log();
+        process.exit(0);
+      }
+    }
+    
+    // Add meldoc configuration
+    config.mcpServers.meldoc = expectedConfig;
+    
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(configDir)) {
+      logger.info(`Creating directory: ${configDir}`);
+      fs.mkdirSync(configDir, { recursive: true });
+    }
+    
+    // Write config file
+    const configContent = JSON.stringify(config, null, 2);
+    fs.writeFileSync(configPath, configContent, 'utf8');
+    
+    logger.success('Configuration added successfully!');
+    console.log();
+    
+    // Show what was added
+    logger.info('Added MCP server configuration:');
+    console.log('  ' + logger.highlight(JSON.stringify(config.mcpServers.meldoc, null, 2)));
+    console.log();
+    
+    // Count other MCP servers
+    const otherServers = Object.keys(config.mcpServers).filter(key => key !== 'meldoc');
+    if (otherServers.length > 0) {
+      logger.info(`Found ${otherServers.length} other MCP server(s): ${otherServers.join(', ')}`);
+      console.log();
+    }
+    
+    // Next steps
+    logger.section('✅ Installation Complete!');
+    console.log();
+    logger.info('Next steps:');
+    console.log();
+    console.log('  1. ' + logger.label('Restart Cursor'));
+    console.log('     Completely close and reopen Cursor for changes to take effect.');
+    console.log();
+    console.log('  2. ' + logger.label('Authenticate with Meldoc'));
+    console.log('     Run: ' + logger.highlight('npx @meldocio/mcp-stdio-proxy auth login'));
+    console.log();
+    console.log('  3. ' + logger.label('Start using Cursor with Meldoc!'));
+    console.log('     Ask Cursor to read, search, or update your documentation.');
+    console.log();
+    
+    process.exit(0);
+  } catch (error) {
+    const configPath = isGlobal ? getCursorGlobalConfigPath() : getCursorProjectConfigPath();
+    logger.error(`Installation failed: ${error.message}`);
+    console.log();
+    logger.info('You can manually configure Cursor by:');
+    console.log('  1. Opening the config file: ' + logger.highlight(configPath));
+    console.log('  2. Adding this configuration:');
+    console.log('     ' + logger.highlight(JSON.stringify({
+      mcpServers: {
+        meldoc: getExpectedMeldocConfigForCursor()
+      }
+    }, null, 2)));
+    console.log();
+    process.exit(1);
+  }
+}
+
+/**
+ * Install local mcp.json file
+ */
+function installLocal() {
+  try {
+    logger.section('🚀 Installing Meldoc MCP (Local mcp.json)');
+    console.log();
+    
+    const configPath = getLocalMcpJsonPath();
+    const expectedConfig = getExpectedMeldocConfig();
+    
+    logger.info(`Config file location: ${logger.highlight(configPath)}`);
+    console.log();
+    
+    // Read existing config or create new one
+    let config = {};
+    let configExists = false;
+    
+    if (fs.existsSync(configPath)) {
+      try {
+        const content = fs.readFileSync(configPath, 'utf8');
+        config = JSON.parse(content);
+        configExists = true;
+        logger.info('Found existing mcp.json configuration');
+      } catch (error) {
+        logger.warn(`Failed to parse existing config: ${error.message}`);
+        logger.info('Will create a new configuration file');
+      }
+    } else {
+      logger.info('Configuration file does not exist, will create it');
+    }
+    
+    // Ensure mcpServers object exists
+    if (!config.mcpServers) {
+      config.mcpServers = {};
+    }
+    
+    // Check if meldoc is already configured
+    if (config.mcpServers.meldoc) {
+      const existingConfig = config.mcpServers.meldoc;
+      const isEqual = configsEqual(existingConfig, expectedConfig);
+      
+      if (isEqual) {
+        logger.success('Meldoc MCP is already configured correctly!');
+        console.log();
+        logger.info('Current configuration:');
+        console.log('  ' + logger.highlight(JSON.stringify(existingConfig, null, 2)));
+        console.log();
+        logger.info('No changes needed. Next steps:');
+        console.log('  1. Restart your MCP client (if needed)');
+        console.log('  2. Run: ' + logger.highlight('npx @meldocio/mcp-stdio-proxy auth login'));
+        console.log();
+        process.exit(0);
+      } else {
+        logger.warn('Meldoc MCP is already configured, but with different settings');
+        console.log();
+        logger.info('Current configuration:');
+        console.log('  ' + logger.highlight(JSON.stringify(existingConfig, null, 2)));
+        console.log();
+        logger.info('Expected configuration:');
+        console.log('  ' + logger.highlight(JSON.stringify(expectedConfig, null, 2)));
+        console.log();
+        logger.info('Updating configuration...');
+        console.log();
+      }
+    }
+    
+    // Add/update meldoc configuration
+    config.mcpServers.meldoc = expectedConfig;
+    
+    // Write config file
+    const configContent = JSON.stringify(config, null, 2);
+    fs.writeFileSync(configPath, configContent, 'utf8');
+    
+    logger.success('Configuration ' + (configExists && config.mcpServers.meldoc ? 'updated' : 'added') + ' successfully!');
+    console.log();
+    
+    // Show what was added
+    logger.info('MCP server configuration:');
+    console.log('  ' + logger.highlight(JSON.stringify(config.mcpServers.meldoc, null, 2)));
+    console.log();
+    
+    // Count other MCP servers
+    const otherServers = Object.keys(config.mcpServers).filter(key => key !== 'meldoc');
+    if (otherServers.length > 0) {
+      logger.info(`Found ${otherServers.length} other MCP server(s): ${otherServers.join(', ')}`);
+      console.log();
+    }
+    
+    // Next steps
+    logger.section('✅ Installation Complete!');
+    console.log();
+    logger.info('Next steps:');
+    console.log();
+    console.log('  1. ' + logger.label('Use this mcp.json with your MCP client'));
+    console.log('     This file can be imported or referenced by MCP clients that support JSON configuration.');
+    console.log();
+    console.log('  2. ' + logger.label('Authenticate with Meldoc'));
+    console.log('     Run: ' + logger.highlight('npx @meldocio/mcp-stdio-proxy auth login'));
+    console.log();
+    
+    process.exit(0);
+  } catch (error) {
+    logger.error(`Installation failed: ${error.message}`);
+    console.log();
+    logger.info('You can manually create mcp.json with this configuration:');
+    console.log('     ' + logger.highlight(JSON.stringify({
+      mcpServers: {
+        meldoc: getExpectedMeldocConfig()
+      }
+    }, null, 2)));
+    console.log();
+    process.exit(1);
+  }
+}
+
+/**
+ * Install for Claude Code (project, user, or local scope)
+ */
+function installClaudeCode(scope = 'project') {
+  try {
+    let configPath;
+    if (scope === 'project') {
+      configPath = getClaudeCodeProjectConfigPath();
+    } else if (scope === 'user') {
+      configPath = getClaudeCodeUserConfigPath();
+    } else {
+      // local scope
+      configPath = getClaudeCodeLocalConfigPath();
+    }
+    const configDir = path.dirname(configPath);
+    const expectedConfig = getExpectedMeldocConfigForClaudeCode();
+    
+    logger.section(`🚀 Installing Meldoc MCP for Claude Code (${scope} scope)`);
+    console.log();
+    
+    logger.info(`Config file location: ${logger.highlight(configPath)}`);
+    console.log();
+    
+    // Read existing config or create new one
+    let config = {};
+    let configExists = false;
+    
+    if (fs.existsSync(configPath)) {
+      try {
+        const content = fs.readFileSync(configPath, 'utf8');
+        config = JSON.parse(content);
+        configExists = true;
+        logger.info('Found existing Claude Code MCP configuration');
+      } catch (error) {
+        logger.warn(`Failed to parse existing config: ${error.message}`);
+        logger.info('Will create a new configuration file');
+      }
+    } else {
+      logger.info('Configuration file does not exist, will create it');
+    }
+    
+    // Ensure mcpServers object exists
+    if (!config.mcpServers) {
+      config.mcpServers = {};
+    }
+    
+    // Check if meldoc is already configured
+    if (config.mcpServers.meldoc) {
+      const existingConfig = config.mcpServers.meldoc;
+      // For Claude Code, compare type, command, and args
+      const isEqual = existingConfig.type === expectedConfig.type &&
+                      existingConfig.command === expectedConfig.command &&
+                      Array.isArray(existingConfig.args) &&
+                      Array.isArray(expectedConfig.args) &&
+                      existingConfig.args.length === expectedConfig.args.length &&
+                      existingConfig.args.every((arg, i) => arg === expectedConfig.args[i]);
+      
+      if (isEqual) {
+        logger.success('Meldoc MCP is already configured correctly!');
+        console.log();
+        logger.info('Current configuration:');
+        console.log('  ' + logger.highlight(JSON.stringify(existingConfig, null, 2)));
+        console.log();
+        logger.info('No changes needed. Next steps:');
+        console.log('  1. Restart Claude Code (if you haven\'t already)');
+        console.log('  2. Run: ' + logger.highlight('npx @meldocio/mcp-stdio-proxy auth login'));
+        console.log();
+        process.exit(0);
+      } else {
+        logger.warn('Meldoc MCP is already configured, but with different settings');
+        console.log();
+        logger.info('Current configuration:');
+        console.log('  ' + logger.highlight(JSON.stringify(existingConfig, null, 2)));
+        console.log();
+        logger.info('Expected configuration:');
+        console.log('  ' + logger.highlight(JSON.stringify(expectedConfig, null, 2)));
+        console.log();
+        logger.info('Updating configuration...');
+        console.log();
+      }
+    }
+    
+    // Add/update meldoc configuration
+    config.mcpServers.meldoc = expectedConfig;
+    
+    // Create directory if it doesn't exist (for user/local scope)
+    if (scope !== 'project' && !fs.existsSync(configDir)) {
+      logger.info(`Creating directory: ${configDir}`);
+      fs.mkdirSync(configDir, { recursive: true });
+    }
+    
+    // Write config file
+    const configContent = JSON.stringify(config, null, 2);
+    fs.writeFileSync(configPath, configContent, 'utf8');
+    
+    logger.success('Configuration ' + (configExists && config.mcpServers.meldoc ? 'updated' : 'added') + ' successfully!');
+    console.log();
+    
+    // Show what was added
+    logger.info('MCP server configuration:');
+    console.log('  ' + logger.highlight(JSON.stringify(config.mcpServers.meldoc, null, 2)));
+    console.log();
+    
+    // Count other MCP servers
+    const otherServers = Object.keys(config.mcpServers).filter(key => key !== 'meldoc');
+    if (otherServers.length > 0) {
+      logger.info(`Found ${otherServers.length} other MCP server(s): ${otherServers.join(', ')}`);
+      console.log();
+    }
+    
+    // Next steps
+    logger.section('✅ Installation Complete!');
+    console.log();
+    logger.info('Next steps:');
+    console.log();
+    console.log('  1. ' + logger.label('Restart Claude Code'));
+    console.log('     Completely close and reopen Claude Code for changes to take effect.');
+    console.log();
+    console.log('  2. ' + logger.label('Authenticate with Meldoc'));
+    console.log('     Run: ' + logger.highlight('npx @meldocio/mcp-stdio-proxy auth login'));
+    console.log();
+    console.log('  3. ' + logger.label('Start using Claude Code with Meldoc!'));
+    console.log('     Ask Claude Code to read, search, or update your documentation.');
+    console.log();
+    
+    process.exit(0);
+  } catch (error) {
+    const configPath = scope === 'project' ? getClaudeCodeProjectConfigPath() : getClaudeCodeUserConfigPath();
+    logger.error(`Installation failed: ${error.message}`);
+    console.log();
+    logger.info('You can manually configure Claude Code by:');
+    console.log('  1. Opening the config file: ' + logger.highlight(configPath));
+    console.log('  2. Adding this configuration:');
+    console.log('     ' + logger.highlight(JSON.stringify({
+      mcpServers: {
+        meldoc: getExpectedMeldocConfigForClaudeCode()
+      }
+    }, null, 2)));
+    console.log();
+    logger.info('Or use the CLI command:');
+    console.log('  ' + logger.highlight(`claude mcp add --transport stdio meldoc -- npx -y @meldocio/mcp-stdio-proxy@latest --scope ${scope}`));
+    console.log();
+    process.exit(1);
+  }
+}
+
+/**
+ * Handle install command - automatically configure MCP client
+ */
+function handleInstall(consumer, isLocal) {
+  if (isLocal) {
+    installLocal();
+    return;
+  }
+  
+  const consumerLower = (consumer || 'claude-desktop').toLowerCase();
+  
+  switch (consumerLower) {
+    case 'claude-desktop':
+    case 'claude':
+      installClaudeDesktop();
+      break;
+    case 'cursor':
+      installCursor(false); // Project-specific by default
+      break;
+    case 'cursor-global':
+      installCursor(true);
+      break;
+    case 'claude-code':
+      installClaudeCode('project'); // Project scope by default
+      break;
+    case 'claude-code-user':
+      installClaudeCode('user');
+      break;
+    case 'claude-code-local':
+      installClaudeCode('local');
+      break;
+    default:
+      logger.error(`Unknown consumer: ${consumer}`);
+      console.log();
+      logger.info('Supported consumers:');
+      console.log('  ' + logger.highlight('claude-desktop') + ' (or claude) - Claude Desktop');
+      console.log('  ' + logger.highlight('cursor') + ' - Cursor IDE (project-specific)');
+      console.log('  ' + logger.highlight('cursor-global') + ' - Cursor IDE (global)');
+      console.log('  ' + logger.highlight('claude-code') + ' - Claude Code (project scope)');
+      console.log('  ' + logger.highlight('claude-code-user') + ' - Claude Code (user scope)');
+      console.log('  ' + logger.highlight('claude-code-local') + ' - Claude Code (local scope)');
+      console.log();
+      logger.info('Or use ' + logger.highlight('--local') + ' flag to create local mcp.json');
+      console.log();
+      process.exit(1);
+  }
+}
+
+/**
  * Handle uninstall command - remove Meldoc MCP configuration from Claude Desktop
  */
 function handleUninstall() {
@@ -493,8 +1020,10 @@ function handleHelp() {
   console.log('    List all available workspaces');
   console.log();
   
-  console.log('  ' + logger.highlight('install'));
-  console.log('    Automatically configure Claude Desktop for Meldoc MCP');
+  console.log('  ' + logger.highlight('install [consumer] [--local]'));
+  console.log('    Automatically configure MCP client for Meldoc MCP');
+  console.log('    Consumers: claude-desktop (default), cursor, cursor-global, claude-code');
+  console.log('    Use --local flag to create local mcp.json file');
   console.log();
   
   console.log('  ' + logger.highlight('uninstall'));
@@ -507,6 +1036,10 @@ function handleHelp() {
   
   console.log(logger.label('Examples:'));
   console.log('  ' + logger.highlight('npx @meldocio/mcp-stdio-proxy install'));
+  console.log('  ' + logger.highlight('npx @meldocio/mcp-stdio-proxy install claude-desktop'));
+  console.log('  ' + logger.highlight('npx @meldocio/mcp-stdio-proxy install cursor'));
+  console.log('  ' + logger.highlight('npx @meldocio/mcp-stdio-proxy install claude-code'));
+  console.log('  ' + logger.highlight('npx @meldocio/mcp-stdio-proxy install --local'));
   console.log('  ' + logger.highlight('npx @meldocio/mcp-stdio-proxy uninstall'));
   console.log('  ' + logger.highlight('npx @meldocio/mcp-stdio-proxy auth login'));
   console.log('  ' + logger.highlight('npx @meldocio/mcp-stdio-proxy config set-workspace my-workspace'));
@@ -529,7 +1062,7 @@ function showUsageHints() {
   console.log('  ' + logger.highlight('config set-workspace') + ' - Set workspace alias');
   console.log('  ' + logger.highlight('config get-workspace') + ' - Get current workspace');
   console.log('  ' + logger.highlight('config list-workspaces') + ' - List workspaces');
-  console.log('  ' + logger.highlight('install') + '            - Configure Claude Desktop');
+  console.log('  ' + logger.highlight('install [consumer]') + ' - Configure MCP client');
   console.log('  ' + logger.highlight('uninstall') + '          - Remove configuration');
   console.log('  ' + logger.highlight('help') + '              - Show detailed help');
   console.log();
@@ -557,7 +1090,19 @@ async function main() {
   if (command === 'help' || command === '--help' || command === '-h') {
     handleHelp();
   } else if (command === 'install') {
-    handleInstall();
+    // Parse install arguments
+    let consumer = null;
+    let isLocal = false;
+    
+    for (let i = 1; i < args.length; i++) {
+      if (args[i] === '--local' || args[i] === '-l') {
+        isLocal = true;
+      } else if (!args[i].startsWith('--') && !args[i].startsWith('-')) {
+        consumer = args[i];
+      }
+    }
+    
+    handleInstall(consumer, isLocal);
   } else if (command === 'uninstall') {
     handleUninstall();
   } else if (command === 'auth') {
@@ -617,5 +1162,9 @@ module.exports = {
   handleConfigGetWorkspace,
   handleConfigListWorkspaces,
   handleInstall,
-  handleUninstall
+  handleUninstall,
+  installClaudeDesktop,
+  installCursor,
+  installClaudeCode,
+  installLocal
 };
