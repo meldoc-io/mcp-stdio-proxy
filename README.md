@@ -15,6 +15,48 @@ This is a bridge between Claude Desktop and Meldoc. After setup, Claude will be 
 
 ## Quick Setup
 
+### Automatic Installation (Recommended) ✨
+
+The easiest way to set up Meldoc MCP is using the automatic installer:
+
+```bash
+npx @meldocio/mcp-stdio-proxy@latest install
+```
+
+This command will:
+- ✅ Automatically find your Claude Desktop configuration file
+- ✅ Add Meldoc MCP configuration (preserving existing MCP servers)
+- ✅ Create the config file and directory if needed
+- ✅ Check if already installed (won't duplicate if already configured)
+- ✅ Show you the next steps
+
+After running `install`, you just need to:
+1. Restart Claude Desktop
+2. Run `npx @meldocio/mcp-stdio-proxy@latest auth login`
+
+Done! 🎉
+
+### Uninstalling
+
+To remove Meldoc MCP from Claude Desktop:
+
+```bash
+npx @meldocio/mcp-stdio-proxy@latest uninstall
+```
+
+This will:
+- ✅ Remove Meldoc MCP configuration from Claude Desktop
+- ✅ Preserve other MCP servers
+- ✅ Clean up empty `mcpServers` object if needed
+
+After running `uninstall`, restart Claude Desktop for changes to take effect.
+
+---
+
+### Manual Installation
+
+If you prefer to configure manually, follow these steps:
+
 ### Step 1: Find Claude Desktop configuration file
 
 Open the configuration file depending on your operating system:
@@ -186,6 +228,16 @@ When you ask Claude to do something with your documentation:
 
 ## Working Commands
 
+### Installation commands
+
+```bash
+# Automatically configure Claude Desktop for Meldoc MCP
+npx @meldocio/mcp-stdio-proxy@latest install
+
+# Remove Meldoc MCP configuration from Claude Desktop
+npx @meldocio/mcp-stdio-proxy@latest uninstall
+```
+
 ### Authentication commands
 
 ```bash
@@ -212,6 +264,16 @@ npx @meldocio/mcp-stdio-proxy@latest config set-workspace workspace-name
 
 # View current workspace
 npx @meldocio/mcp-stdio-proxy@latest config get-workspace
+```
+
+### Installation
+
+```bash
+# Automatically configure Claude Desktop
+npx @meldocio/mcp-stdio-proxy@latest install
+
+# Remove configuration
+npx @meldocio/mcp-stdio-proxy@latest uninstall
 ```
 
 ### Help

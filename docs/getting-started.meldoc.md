@@ -2,9 +2,45 @@
 alias: getting-started
 title: Getting Started
 ---
-Get up and running with Meldoc MCP in 4 simple steps!
+Get up and running with Meldoc MCP in just 2 steps!
 
-## Step 1: Configure Claude Desktop
+## Quick Start (Automatic Installation) ✨
+
+The easiest way to set up Meldoc MCP:
+
+1. **Run the installer:**
+
+   ```bash
+   npx @meldocio/mcp-stdio-proxy@latest install
+   ```
+
+2. **Restart Claude Desktop** (completely close and reopen)
+
+3. **Authenticate:**
+
+   ```bash
+   npx @meldocio/mcp-stdio-proxy@latest auth login
+   ```
+
+Done! 🎉 Claude can now access your Meldoc documentation.
+
+### Uninstalling
+
+To remove Meldoc MCP from Claude Desktop:
+
+```bash
+npx @meldocio/mcp-stdio-proxy@latest uninstall
+```
+
+After running `uninstall`, restart Claude Desktop for changes to take effect.
+
+---
+
+## Manual Installation
+
+If you prefer to configure manually, follow these steps:
+
+### Step 1: Configure Claude Desktop
 
 Find and open your Claude Desktop configuration file:
 
