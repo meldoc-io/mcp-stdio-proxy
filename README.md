@@ -1,49 +1,108 @@
-# @meldocio/mcp-stdio-proxy
+# Meldoc MCP for Claude Desktop
 
-MCP stdio proxy for meldoc - connects Claude Desktop to meldoc MCP API without requiring CLI installation.
+This package allows you to connect Claude Desktop to your Meldoc account, so you can use all your documentation directly in Claude.
 
-## Description
+## What is this?
 
-This npm package provides a lightweight proxy that bridges JSON-RPC communication between Claude Desktop and the meldoc MCP API. It reads JSON-RPC requests from stdin and forwards them to the meldoc API over HTTP, then returns the responses via stdout.
+This is a bridge between Claude Desktop and Meldoc. After setup, Claude will be able to:
 
-The package follows MCP best practices:
+- 📖 Read your documentation from Meldoc
+- 🔍 Search through documents
+- ✏️ Create and update documents (if you have permissions)
+- 📁 Work with projects and workspaces
 
-- ✅ Pure stdio communication (no interactive prompts)
-- ✅ All logs go to stderr (stdout is clean JSON-RPC only)
-- ✅ No required arguments at startup
-- ✅ Graceful error handling with proper JSON-RPC error codes
-- ✅ Configurable logging levels
+**No additional installation required** - everything works automatically through Claude Desktop.
 
-## Installation
+## Quick Setup
 
-### Using Claude Desktop MCP Command
+### Step 1: Find Claude Desktop configuration file
 
-```bash
-claude mcp add meldoc npx @meldocio/mcp-stdio-proxy@latest
-```
-
-### Manual Configuration
-
-Add the following configuration to your `claude_desktop_config.json` file:
+Open the configuration file depending on your operating system:
 
 **macOS:**
 
-```
+```text
 ~/Library/Application Support/Claude/claude_desktop_config.json
 ```
 
 **Windows:**
 
-```
+```text
 %APPDATA%\Claude\claude_desktop_config.json
 ```
 
 **Linux:**
 
-```
+```text
 ~/.config/Claude/claude_desktop_config.json
 ```
 
+> 💡 **Tip:** If the file doesn't exist, create it. Make sure the folder exists.
+
+### Step 2: Add Meldoc configuration
+
+Open the file in any text editor and add the following:
+
+```json
+{
+  "mcpServers": {
+    "meldoc": {
+      "command": "npx",
+      "args": ["-y", "@meldocio/mcp-stdio-proxy@latest"]
+    }
+  }
+}
+```
+
+> ⚠️ **Important:** If the file already has other MCP servers, simply add `"meldoc"` to the existing `mcpServers` object.
+
+### Step 3: Restart Claude Desktop
+
+Completely close and reopen Claude Desktop for the changes to take effect.
+
+### Step 4: Log in to your Meldoc account
+
+Open a terminal and run:
+
+```bash
+npx @meldoc/mcp@latest auth login
+```
+
+Follow the on-screen instructions - you'll need to open a link in your browser and enter a code.
+
+Done! Now Claude can work with your Meldoc documentation.
+
+## Authentication (Logging in)
+
+For Claude to work with your documentation, you need to log in to your Meldoc account. There are several ways to do this:
+
+### Method 1: Interactive login (recommended) ✨
+
+The easiest way is to use the login command:
+
+```bash
+npx @meldoc/mcp@latest auth login
+```
+
+**What will happen:**
+
+1. A link and code will appear in the terminal
+2. Open the link in your browser
+3. Enter the code on the Meldoc website
+4. Done! Your data will be saved automatically
+
+**Advantages:**
+
+- ✅ No need to copy tokens manually
+- ✅ Tokens are updated automatically
+- ✅ Secure data storage
+
+### Method 2: Using a token (for integrations)
+
+If you're using a token for integration (e.g., for CI/CD), you can specify it directly.
+
+**In Claude Desktop configuration:**
+
 ```json
 {
   "mcpServers": {
@@ -51,241 +110,268 @@ Add the following configuration to your `claude_desktop_config.json` file:
       "command": "npx",
       "args": ["-y", "@meldocio/mcp-stdio-proxy@latest"],
       "env": {
-        "MELDOC_TOKEN": "your_token_here"
+        "MELDOC_ACCESS_TOKEN": "your_token_here"
       }
     }
   }
 }
 ```
 
-After adding the configuration, restart Claude Desktop.
-
-## Authentication
-
-Meldoc MCP requires an access token. The token is checked in this order:
-
-1. `MELDOC_TOKEN` environment variable (recommended)
-2. `MELDOC_MCP_TOKEN` environment variable (backward compatibility)
-3. `~/.meldoc/config.json` file
-4. If none found, tools will return an authentication error
-
-### Option 1: Environment variable (recommended)
-
-Set the token as an environment variable:
+**Or via environment variable:**
 
 ```bash
-export MELDOC_TOKEN=your_token_here
+export MELDOC_ACCESS_TOKEN=your_token_here
 ```
 
-For permanent setup (macOS/Linux):
+### Check login status
+
+To check if you're logged in:
 
 ```bash
-echo 'export MELDOC_TOKEN=your_token_here' >> ~/.zshrc  # or ~/.bashrc
-source ~/.zshrc
+npx @meldoc/mcp@latest auth status
 ```
 
-For Claude Desktop, add it to your configuration:
+### Logging out
 
-```json
-{
-  "mcpServers": {
-    "meldoc": {
-      "command": "npx",
-      "args": ["-y", "@meldocio/mcp-stdio-proxy@latest"],
-      "env": {
-        "MELDOC_TOKEN": "your_token_here"
-      }
-    }
-  }
-}
-```
-
-### Option 2: Meldoc CLI
-
-If you have the Meldoc CLI installed, run:
+To log out and remove saved data:
 
 ```bash
-meldoc auth login
+npx @meldoc/mcp@latest auth logout
 ```
 
-This will store the token in `~/.meldoc/config.json`, which the MCP proxy will automatically use.
+### Automatic token refresh
 
-### Option 3: Manual config file
+If you used `auth login`, tokens will be automatically refreshed 5 minutes before expiration. You don't need to do anything - everything works automatically!
 
-Create `~/.meldoc/config.json` manually:
+## Frequently Asked Questions
 
-```json
-{
-  "token": "your_token_here"
-}
-```
+### Do I need to install anything additional?
 
-### Environment Variables
+No! Everything works through `npx`, which automatically downloads the necessary files on first use.
 
-- **MELDOC_TOKEN** (recommended): Your meldoc authentication token
-- **MELDOC_MCP_TOKEN** (optional): Alternative token variable (for backward compatibility)
-- **LOG_LEVEL** (optional): Logging level - `ERROR`, `WARN`, `INFO`, or `DEBUG` (default: `ERROR`)
+### Is this secure?
 
-### Command Line Testing
+Yes! Your tokens are stored locally on your computer with proper access permissions. Tokens are automatically refreshed so they don't expire.
 
-You can test the proxy directly from the command line:
+### Can I use multiple accounts?
+
+Yes, but you need to switch between them using the `auth logout` and `auth login` commands.
+
+### What to do if something doesn't work?
+
+1. Check that you're logged in: `npx @meldoc/mcp@latest auth status`
+2. Check workspace: `npx @meldoc/mcp@latest config get-workspace`
+3. See the "Troubleshooting" section above
+4. If nothing helps, create an issue on GitHub
+
+## How does it work?
+
+When you ask Claude to do something with your documentation:
+
+1. Claude sends a request through MCP (Model Context Protocol)
+2. Our proxy receives the request and adds your authorization token
+3. The request is sent to the Meldoc server
+4. The response is returned back to Claude
+5. Claude shows you the result
+
+**Everything happens automatically** - you don't need to do anything manually!
+
+### Features
+
+- ✅ Automatic token refresh (no need to log in every time)
+- ✅ Smart workspace selection (if there's only one, it's selected automatically)
+- ✅ Secure data storage
+- ✅ Works with multiple workspaces
+- ✅ Support for projects and repositories
+
+## Working Commands
+
+### Authentication commands
 
 ```bash
-# Test initialize (works without token)
-echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}' | \
-  npx @meldocio/mcp-stdio-proxy@latest
+# Log in to account (browser will open)
+npx @meldoc/mcp@latest auth login
 
-# Test tools/list (requires token)
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
-  MELDOC_TOKEN=your_token_here npx @meldocio/mcp-stdio-proxy@latest
+# Check if you're logged in
+npx @meldoc/mcp@latest auth status
 
-# Test with debug logging
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
-  MELDOC_TOKEN=your_token_here LOG_LEVEL=DEBUG npx @meldocio/mcp-stdio-proxy@latest
+# Log out of account
+npx @meldoc/mcp@latest auth logout
 ```
 
-## How It Works
+### Workspace management commands
 
-1. The proxy reads JSON-RPC requests from `stdin` (newline-delimited JSON)
-2. Protocol methods (`initialize`, `ping`, `resources/list`) are handled locally
-3. Tool requests are forwarded to `https://api.meldoc.io/mcp/v1/rpc`
-4. The `Authorization: Bearer {token}` header is automatically added
-5. Responses are written to `stdout` in JSON-RPC format (stdout is clean - only JSON-RPC)
-6. All logs and diagnostics go to `stderr`
-7. Errors are handled and returned as proper JSON-RPC error responses
-
-### Supported Features
-
-- ✅ JSON-RPC 2.0 protocol
-- ✅ Single and batch requests
-- ✅ Proper error handling with JSON-RPC error codes
-- ✅ Custom error codes: `AUTH_REQUIRED`, `NOT_FOUND`, `RATE_LIMIT`
-- ✅ Request timeout handling (25 seconds)
-- ✅ Network error recovery
-- ✅ Line-by-line processing for streaming
-- ✅ Automatic support for all MCP tools (including `server_info`)
-- ✅ Configurable logging levels (ERROR, WARN, INFO, DEBUG)
-- ✅ Graceful shutdown on SIGINT/SIGTERM
-- ✅ No required arguments at startup
-
-## JSON-RPC Error Codes
-
-The proxy uses standard JSON-RPC 2.0 error codes plus custom codes:
-
-### Standard JSON-RPC 2.0 Codes
-
-- `-32700`: Parse error (invalid JSON)
-- `-32600`: Invalid Request (malformed JSON-RPC)
-- `-32601`: Method not found
-- `-32602`: Invalid params
-- `-32603`: Internal error (network errors, timeouts, etc.)
-- `-32000`: Server error (HTTP 4xx/5xx responses)
-
-### Custom Error Codes
-
-- `-32001`: Authentication required (`AUTH_REQUIRED`) - Token missing or invalid
-- `-32002`: Not found (`NOT_FOUND`) - Resource not found
-- `-32003`: Rate limit exceeded (`RATE_LIMIT`) - Too many requests
-
-Error responses include:
-
-- `code`: Error code
-- `message`: Human-readable error message
-- `data` (optional, DEBUG level only): Additional error details
-
-## Available Tools
-
-The proxy automatically supports all tools provided by the meldoc MCP API, including:
-
-- **`server_info`** - Get information about the server configuration, available projects, and token capabilities
-- **`docs_list`** - List available documentation
-- **`docs_get`** - Get specific documentation content
-- And other tools as provided by the API
-
-### Example: Using `server_info`
-
-You can get server information using the `server_info` tool:
+If you have multiple workspaces, you can manage them:
 
 ```bash
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"server_info","arguments":{}}}' | \
-  MELDOC_MCP_TOKEN=your_token_here npx @meldocio/mcp-stdio-proxy
+# View all available workspaces
+npx @meldoc/mcp@latest config list-workspaces
+
+# Set default workspace
+npx @meldoc/mcp@latest config set-workspace workspace-name
+
+# View current workspace
+npx @meldoc/mcp@latest config get-workspace
 ```
 
-The response includes:
+### Help
 
-- Server name (from token)
-- Token description (if provided)
-- Available projects with IDs, names, and aliases
-- Token capabilities (read, update, create, delete)
-- Usage hints
-
-### Response Metadata
-
-All tool responses now include a `_meta` field with contextual information:
-
-```json
-{
-  "items": [...],
-  "_meta": {
-    "server": "My Token",
-    "projects": ["Frontend Docs", "Backend API"],
-    "capabilities": ["read"],
-    "hint": "Read permission required for this operation"
-  }
-}
+```bash
+# Show all available commands
+npx @meldoc/mcp@latest help
 ```
 
-This metadata helps AI assistants understand the context and limitations of the current token.
+## Working with Workspaces
+
+If you have multiple workspaces in Meldoc, you need to specify which one to use.
+
+### How is workspace selected?
+
+The system selects a workspace in this order:
+
+1. **Specified in request** - if you explicitly specified `workspaceAlias` or `workspaceId`
+2. **Project file** - if there's a `.meldoc.yml` file in the project folder
+3. **Global setting** - if you set a default workspace
+4. **Automatically** - if you only have one workspace, it will be selected automatically
+
+### Setting default workspace
+
+If you have multiple workspaces, set one as default:
+
+```bash
+npx @meldoc/mcp@latest config set-workspace workspace-name
+```
+
+After this, Claude will automatically use this workspace.
+
+### Workspace for a specific project
+
+If you want different projects to use different workspaces, create a `.meldoc.yml` file in the project root:
+
+```yaml
+context:
+  workspace: workspace-name-for-this-project
+```
+
+Now when working from this folder, the specified workspace will be used.
+
+## What can Claude do with your documentation?
+
+After setup, Claude gets access to the following capabilities:
+
+### 📖 Working with documents
+
+- **`docs_list`** - Show list of all documents in the project
+- **`docs_get`** - Get content of a specific document
+- **`docs_tree`** - Show document structure (tree)
+- **`docs_search`** - Find documents by text
+- **`docs_create`** - Create a new document (requires permissions)
+- **`docs_update`** - Update a document (requires permissions)
+- **`docs_delete`** - Delete a document (requires permissions)
+- **`docs_links`** - Show all links from a document
+- **`docs_backlinks`** - Show all documents that link to this one
+
+### 📁 Working with projects
+
+- **`projects_list`** - Show all available projects
+
+### ⚙️ Management
+
+- **`server_info`** - Information about your account and access permissions
+- **`list_workspaces`** - Show all workspaces
+- **`set_workspace`** - Set default workspace
+- **`get_workspace`** - Get current workspace
+- **`auth_status`** - Check login status
+
+### How to use this?
+
+Just ask Claude in a regular conversation! For example:
+
+- "Show me all documents in the API project"
+- "Find information about the authorization function"
+- "Create a new document with API description"
+- "Which documents link to the database document?"
+
+Claude will automatically select the right tool and execute the request.
 
 ## Troubleshooting
 
-### Error: AUTH_REQUIRED - Meldoc token not found
+### Error: "AUTH_REQUIRED" - token not found
 
-**Solution:** Set the `MELDOC_TOKEN` environment variable or run `meldoc auth login` to store the token in `~/.meldoc/config.json`. The token is checked when tools are called, not at startup.
+**What to do:**
 
-### Connection timeout
+1. Run the login command:
 
-**Solution:** Check your internet connection and verify that `https://api.meldoc.io` is accessible. You can test with:
+   ```bash
+   npx @meldoc/mcp@latest auth login
+   ```
 
-```bash
-curl https://api.meldoc.io/mcp/v1/rpc \
-  -H "Authorization: Bearer your_token" \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
-```
+2. Or check if you're logged in:
 
-### Invalid token error
+   ```bash
+   npx @meldoc/mcp@latest auth status
+   ```
 
-**Solution:** Verify that your `MELDOC_MCP_TOKEN` is correct and hasn't expired. You can get a new token from the meldoc dashboard.
+3. If using a token directly, make sure it's specified in Claude Desktop configuration
 
-### Claude Desktop not connecting
+### Error: "WORKSPACE_REQUIRED" - need to select workspace
 
-**Solution:**
+**What to do:**
 
-1. Verify the configuration JSON is valid (use a JSON validator)
-2. Check that the file path is correct for your operating system
-3. Restart Claude Desktop completely
-4. Check Claude Desktop logs for error messages
+If you have multiple workspaces, you need to specify which one to use:
 
-### Testing the proxy manually
+1. View the list of available workspaces:
 
-To debug issues, you can test the proxy directly:
+   ```bash
+   npx @meldoc/mcp@latest config list-workspaces
+   ```
 
-```bash
-# Test initialize (works without token)
-echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}' | \
-  npx @meldocio/mcp-stdio-proxy@latest
+2. Set one as default:
 
-# Test with a simple request
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
-  MELDOC_TOKEN=your_token npx @meldocio/mcp-stdio-proxy@latest
+   ```bash
+   npx @meldoc/mcp@latest config set-workspace workspace-name
+   ```
 
-# Test with debug logging
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
-  MELDOC_TOKEN=your_token \
-  LOG_LEVEL=DEBUG \
-  npx @meldocio/mcp-stdio-proxy@latest
-```
+### Error: "Invalid token" - invalid token
+
+**What to do:**
+
+1. If you used `auth login`, just log in again:
+
+   ```bash
+   npx @meldoc/mcp@latest auth login
+   ```
+
+2. Check status:
+
+   ```bash
+   npx @meldoc/mcp@latest auth status
+   ```
+
+3. If using a token manually, make sure it hasn't expired and is specified correctly
+
+### Claude Desktop won't connect
+
+**What to do:**
+
+1. **Check the configuration file:**
+   - Make sure the JSON is valid (you can check on jsonlint.com)
+   - Verify that the file path is correct for your OS
+
+2. **Restart Claude Desktop:**
+   - Completely close the application
+   - Open it again
+
+3. **Check logs:**
+   - Claude Desktop has a logs section - check if there are any errors there
+
+### Internet connection issues
+
+If you're experiencing connection errors:
+
+1. Check your internet connection
+2. Make sure the site `https://api.meldoc.io` is accessible
+3. Check if a firewall or proxy is blocking requests
 
 ## Development
 
@@ -318,10 +404,40 @@ No build step is required - the package uses plain JavaScript.
 npm publish --access public
 ```
 
+## Configuration Files
+
+The system uses several files to store settings. Usually you don't need to edit them manually - everything is done through commands.
+
+### `~/.meldoc/credentials.json`
+
+Created automatically when logging in via `auth login`. Contains:
+
+- Access tokens
+- User information
+- Automatic refresh settings
+
+**Do not edit this file manually!**
+
+### `~/.meldoc/config.json`
+
+Global settings:
+
+- Default workspace
+- Other settings
+
+Can be edited manually or through CLI commands.
+
+### `.meldoc.yml` (optional)
+
+Project-specific settings. Create in the project root if you need to use a different workspace for this project.
+
 ## Requirements
 
-- Node.js >= 18.0.0
-- Valid meldoc MCP token (required for tool calls, not for startup)
+- **Node.js 18.0.0 or newer** (usually already installed if Claude Desktop works)
+- **Meldoc account** (can be created at [app.meldoc.io](https://app.meldoc.io))
+- **Claude Desktop** installed and working
+
+> 💡 **Checking Node.js:** Open a terminal and run `node --version`. If the command is not found, install Node.js from [nodejs.org](https://nodejs.org)
 
 ## License
 
