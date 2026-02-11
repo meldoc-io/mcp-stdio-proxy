@@ -133,7 +133,7 @@ You'll see a URL and code in your terminal. Open the URL in your browser, enter 
 - Learn about [[authentication]] methods
 - Understand [[workspaces]] management
 - Explore [[commands]]
-- See what Claude can do with [[claude-integration]]
+- See available MCP tools in [[mcp-tools]]
 
 ## Troubleshooting
 

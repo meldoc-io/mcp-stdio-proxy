@@ -1,8 +1,8 @@
 ---
-alias: claude-integration
-title: Claude Desktop Integration
+alias: mcp-tools
+title: MCP Tools Reference
 ---
-Once configured, Claude Desktop gains access to powerful Meldoc capabilities through MCP tools.
+Once configured, your MCP client gains access to powerful Meldoc capabilities through MCP tools.
 
 ## Available MCP Tools
 
@@ -62,7 +62,7 @@ Shows all workspaces you have access to, including workspace names, aliases, and
 
 #### `set_workspace`
 
-Sets the default workspace that will be used for all subsequent operations. This preference persists across sessions, so once set, Claude will automatically use this workspace unless you specify otherwise. Useful when you primarily work in one workspace and want to avoid specifying it each time.
+Sets the default workspace that will be used for all subsequent operations. This preference persists across sessions, so once set, your AI assistant will automatically use this workspace unless you specify otherwise. Useful when you primarily work in one workspace and want to avoid specifying it each time.
 
 #### `get_workspace`
 
@@ -72,9 +72,9 @@ Retrieves information about the currently active workspace, showing which worksp
 
 Checks your current authentication status, verifying whether you're logged in and showing token expiration information. This helps you understand if you need to re-authenticate or if your session is still valid. Useful for troubleshooting authentication issues or confirming your login state.
 
-## Using with Claude
+## Using with Your AI Assistant
 
-Simply ask Claude naturally! For example:
+Simply ask your AI assistant naturally! For example:
 
 > "Show me all documents in the API project"
 > "Find information about authentication"
@@ -83,7 +83,7 @@ Simply ask Claude naturally! For example:
 > "Search for information about error handling"
 > "Show me the document tree for the frontend project"
 
-Claude will automatically:
+Your AI assistant will automatically:
 
 - Select the appropriate tool
 - Handle authentication

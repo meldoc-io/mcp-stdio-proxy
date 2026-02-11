@@ -2,32 +2,41 @@
 alias: introduction
 title: Meldoc MCP
 ---
-**Meldoc MCP** is a powerful bridge that connects Claude Desktop to your Meldoc account, enabling seamless access to your documentation directly within Claude conversations.
+**Meldoc MCP** is a powerful bridge that connects MCP-compatible clients to your Meldoc account, enabling seamless access to your documentation directly within AI conversations.
 
 ## Overview
 
-Meldoc MCP allows Claude Desktop to interact with your Meldoc documentation through the Model Context Protocol (MCP). Once configured, you can ask Claude to read, search, create, and update your documentation naturally.
+Meldoc MCP allows AI assistants (Claude Desktop, Cursor IDE, Claude Code, and other MCP clients) to interact with your Meldoc documentation through the Model Context Protocol (MCP). Once configured, you can ask your AI assistant to read, search, create, and update your documentation naturally.
 
 ### Key Features
 
-- 🔗 **Seamless Integration** - Works directly with Claude Desktop via MCP
+- 🔗 **Seamless Integration** - Works with Claude Desktop, Cursor IDE, Claude Code, and other MCP clients
 - 📖 **Document Access** - Read, search, create, and update your Meldoc documentation
 - 🔍 **Smart Search** - Find information across all your documents instantly
 - 🏢 **Multi-Workspace Support** - Work with multiple workspaces and projects
 - 🔐 **Secure Authentication** - Automatic token management with device flow
 - ⚡ **Zero Installation** - Everything works through `npx`, no local installation needed
 
+### Supported MCP Clients
+
+Meldoc MCP works with any client that supports the Model Context Protocol:
+
+- **Claude Desktop** - Official Anthropic desktop application
+- **Cursor IDE** - AI-powered code editor with MCP support
+- **Claude Code** - Terminal-based Claude integration
+- **Other MCP Clients** - Any tool that implements the MCP standard
+
 ### How It Works
 
-When you interact with Claude Desktop:
+When you interact with your AI assistant:
 
-1. **Claude sends a request** through MCP (Model Context Protocol)
+1. **Your AI assistant sends a request** through MCP (Model Context Protocol)
 2. **MCP Proxy receives** the request and adds your authentication token
 3. **Request is forwarded** to the Meldoc API server
-4. **Response is returned** to Claude Desktop
+4. **Response is returned** to your AI assistant
 5. **You see the results** in your conversation
 
-Everything happens automatically in the background - you just ask Claude naturally!
+Everything happens automatically in the background - you just ask your AI assistant naturally!
 
 ## Quick Navigation
 
@@ -35,7 +44,7 @@ Everything happens automatically in the background - you just ask Claude natural
 - [[authentication]] - Learn how to log in and manage credentials
 - [[workspaces]] - Understand and manage workspaces
 - [[commands]] - Complete CLI command reference
-- [[claude-integration]] - Available MCP tools and capabilities
+- [[mcp-tools]] - Available MCP tools and capabilities
 - [[troubleshooting]] - Common issues and solutions
 - [[advanced]] - Configuration files, environment variables, and best practices
 - [[requirements]] - System and account requirements
