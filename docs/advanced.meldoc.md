@@ -48,7 +48,7 @@ The tool uses several configuration files. Usually you don't need to edit them m
 }
 ```
 
-### `.meldoc.yml` (Project-Specific)
+### `meldoc.config.yml` (Project-Specific)
 
 **Location:** Project root directory
 
@@ -59,9 +59,10 @@ The tool uses several configuration files. Usually you don't need to edit them m
 **Example:**
 
 ```yaml
-context:
-  workspace: project-specific-workspace
+workspaceAlias: project-specific-workspace
 ```
+
+**Note:** When MCP is used in a git project or directory (e.g., Claude Desktop terminal or any other LLM), the workspace is automatically taken from this configuration file if it exists.
 
 ## Environment Variables
 

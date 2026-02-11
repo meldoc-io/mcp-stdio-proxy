@@ -292,9 +292,11 @@ If you have multiple workspaces in Meldoc, you need to specify which one to use.
 The system selects a workspace in this order:
 
 1. **Specified in request** - if you explicitly specified `workspaceAlias` or `workspaceId`
-2. **Project file** - if there's a `.meldoc.yml` file in the project folder
+2. **Project file** - if there's a `meldoc.config.yml` file in the project folder (or git repository directory)
 3. **Global setting** - if you set a default workspace
 4. **Automatically** - if you only have one workspace, it will be selected automatically
+
+**Note:** When MCP is used in a git project or directory (e.g., Claude Desktop terminal or any other LLM), the workspace is automatically taken from the `meldoc.config.yml` configuration file if it exists.
 
 ### Setting default workspace
 
@@ -308,14 +310,13 @@ After this, Claude will automatically use this workspace.
 
 ### Workspace for a specific project
 
-If you want different projects to use different workspaces, create a `.meldoc.yml` file in the project root:
+If you want different projects to use different workspaces, create a `meldoc.config.yml` file in the project root:
 
 ```yaml
-context:
-  workspace: workspace-name-for-this-project
+workspaceAlias: workspace-name-for-this-project
 ```
 
-Now when working from this folder, the specified workspace will be used.
+Now when working from this folder (or when MCP is used in a git repository), the specified workspace will be used.
 
 ## What can Claude do with your documentation?
 
@@ -489,9 +490,9 @@ Global settings:
 
 Can be edited manually or through CLI commands.
 
-### `.meldoc.yml` (optional)
+### `meldoc.config.yml` (optional)
 
-Project-specific settings. Create in the project root if you need to use a different workspace for this project.
+Project-specific settings. Create in the project root if you need to use a different workspace for this project. When MCP is used in a git project or directory, the workspace is automatically taken from this configuration file if it exists.
 
 ## Requirements
 

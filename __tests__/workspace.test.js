@@ -11,8 +11,16 @@ const { writeConfig, deleteCredentials } = require('../lib/config');
 // Mock js-yaml
 jest.mock('js-yaml', () => ({
   load: jest.fn((content) => {
-    if (content.includes('workspace: "repo-workspace"')) {
-      return { context: { workspace: 'repo-workspace' } };
+    // Parse YAML-like content for testing
+    if (content.includes('workspaceAlias:')) {
+      const match = content.match(/workspaceAlias:\s*["']?([^"'\n]+)["']?/);
+      if (match) {
+        return { workspaceAlias: match[1] };
+      }
+      return { workspaceAlias: null };
+    }
+    if (content.includes('nameTemplate:')) {
+      return { nameTemplate: 'test' };
     }
     return {};
   })
@@ -44,47 +52,47 @@ describe('workspace', () => {
   });
 
   describe('findRepoConfig', () => {
-    it('should return null if .meldoc.yml does not exist', () => {
+    it('should return null if meldoc.config.yml does not exist', () => {
       const result = findRepoConfig();
       expect(result).toBeNull();
     });
 
-    it('should find .meldoc.yml in current directory', () => {
-      const configPath = path.join(testDir, '.meldoc.yml');
-      fs.writeFileSync(configPath, 'context:\n  workspace: "test"');
+    it('should find meldoc.config.yml in current directory', () => {
+      const configPath = path.join(testDir, 'meldoc.config.yml');
+      fs.writeFileSync(configPath, 'workspaceAlias: "test"');
       
       const result = findRepoConfig();
       expect(result).toBeTruthy();
-      expect(result).toContain('.meldoc.yml');
+      expect(result).toContain('meldoc.config.yml');
       expect(fs.existsSync(result)).toBe(true);
     });
 
-    it('should find .meldoc.yml in parent directory', () => {
+    it('should find meldoc.config.yml in parent directory', () => {
       const subDir = path.join(testDir, 'subdir');
       fs.mkdirSync(subDir, { recursive: true });
-      const configPath = path.join(testDir, '.meldoc.yml');
-      fs.writeFileSync(configPath, 'context:\n  workspace: "test"');
+      const configPath = path.join(testDir, 'meldoc.config.yml');
+      fs.writeFileSync(configPath, 'workspaceAlias: "test"');
       
       process.chdir(subDir);
       const result = findRepoConfig();
       expect(result).toBeTruthy();
-      expect(result).toContain('.meldoc.yml');
+      expect(result).toContain('meldoc.config.yml');
       expect(fs.existsSync(result)).toBe(true);
     });
   });
 
   describe('readRepoConfig', () => {
-    it('should read workspace from .meldoc.yml', () => {
-      const configPath = path.join(testDir, '.meldoc.yml');
-      fs.writeFileSync(configPath, 'context:\n  workspace: "repo-workspace"');
+    it('should read workspace from meldoc.config.yml', () => {
+      const configPath = path.join(testDir, 'meldoc.config.yml');
+      fs.writeFileSync(configPath, 'workspaceAlias: "repo-workspace"');
       
       const result = readRepoConfig(configPath);
       expect(result).toBe('repo-workspace');
     });
 
     it('should return null if workspace not found', () => {
-      const configPath = path.join(testDir, '.meldoc.yml');
-      fs.writeFileSync(configPath, 'context: {}');
+      const configPath = path.join(testDir, 'meldoc.config.yml');
+      fs.writeFileSync(configPath, 'nameTemplate: "test"');
       
       const result = readRepoConfig(configPath);
       expect(result).toBeNull();
@@ -93,8 +101,8 @@ describe('workspace', () => {
 
   describe('resolveWorkspaceAlias', () => {
     it('should return workspace from repo config if useRepoConfig is true', () => {
-      const configPath = path.join(testDir, '.meldoc.yml');
-      fs.writeFileSync(configPath, 'context:\n  workspace: "repo-workspace"');
+      const configPath = path.join(testDir, 'meldoc.config.yml');
+      fs.writeFileSync(configPath, 'workspaceAlias: "repo-workspace"');
       
       const result = resolveWorkspaceAlias(true);
       expect(result).toBe('repo-workspace');
@@ -113,8 +121,8 @@ describe('workspace', () => {
     });
 
     it('should skip repo config if useRepoConfig is false', () => {
-      const configPath = path.join(testDir, '.meldoc.yml');
-      fs.writeFileSync(configPath, 'context:\n  workspace: "repo-workspace"');
+      const configPath = path.join(testDir, 'meldoc.config.yml');
+      fs.writeFileSync(configPath, 'workspaceAlias: "repo-workspace"');
       writeConfig({ workspaceAlias: 'global-workspace' });
       
       const result = resolveWorkspaceAlias(false);

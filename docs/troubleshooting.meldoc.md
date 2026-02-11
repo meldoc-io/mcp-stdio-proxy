@@ -52,11 +52,10 @@ Common issues and their solutions.
 
 3. **Or create a project-specific config:**
 
-   Create `.meldoc.yml` in your project root:
+   Create `meldoc.config.yml` in your project root:
 
    ```yaml
-   context:
-     workspace: your-workspace-name
+   workspaceAlias: your-workspace-name
    ```
 
 ## Error: "Invalid token" - Token is Invalid or Expired
