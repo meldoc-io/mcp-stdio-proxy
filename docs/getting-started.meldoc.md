@@ -54,7 +54,7 @@ Add this configuration to your `claude_desktop_config.json`:
 Open your terminal and run:
 
 ```bash
-npx @meldoc/mcp@latest auth login
+npx @meldocio/mcp-stdio-proxy@latest auth login
 ```
 
 Follow the on-screen instructions:

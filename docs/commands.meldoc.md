@@ -11,7 +11,7 @@ Complete reference for all CLI commands available in Meldoc MCP.
 Authenticate with Meldoc using device flow.
 
 ```bash
-npx @meldoc/mcp@latest auth login
+npx @meldocio/mcp-stdio-proxy@latest auth login
 ```
 
 Opens a browser-based authentication flow. Credentials are saved automatically.
@@ -23,7 +23,7 @@ Opens a browser-based authentication flow. Credentials are saved automatically.
 Check your current authentication status.
 
 ```bash
-npx @meldoc/mcp@latest auth status
+npx @meldocio/mcp-stdio-proxy@latest auth status
 ```
 
 **Shows:**
@@ -37,7 +37,7 @@ npx @meldoc/mcp@latest auth status
 Log out and clear all saved credentials.
 
 ```bash
-npx @meldoc/mcp@latest auth logout
+npx @meldocio/mcp-stdio-proxy@latest auth logout
 ```
 
 ## Configuration Commands
@@ -47,7 +47,7 @@ npx @meldoc/mcp@latest auth logout
 Set the default workspace alias.
 
 ```bash
-npx @meldoc/mcp@latest config set-workspace my-workspace
+npx @meldocio/mcp-stdio-proxy@latest config set-workspace my-workspace
 ```
 
 **See also:** [Workspace Management](workspaces.meldoc.md)
@@ -57,7 +57,7 @@ npx @meldoc/mcp@latest config set-workspace my-workspace
 Get the currently active workspace alias.
 
 ```bash
-npx @meldoc/mcp@latest config get-workspace
+npx @meldocio/mcp-stdio-proxy@latest config get-workspace
 ```
 
 ### `config list-workspaces`
@@ -65,7 +65,7 @@ npx @meldoc/mcp@latest config get-workspace
 List all available workspaces.
 
 ```bash
-npx @meldoc/mcp@latest config list-workspaces
+npx @meldocio/mcp-stdio-proxy@latest config list-workspaces
 ```
 
 ## Help Command
@@ -75,7 +75,7 @@ npx @meldoc/mcp@latest config list-workspaces
 Show detailed help information.
 
 ```bash
-npx @meldoc/mcp@latest help
+npx @meldocio/mcp-stdio-proxy@latest help
 ```
 
 ## Related

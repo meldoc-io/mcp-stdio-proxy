@@ -729,7 +729,7 @@ async function handleToolsCall(request) {
                 type: 'text',
                 text: JSON.stringify({
                   authenticated: false,
-                  message: 'Not authenticated. Run: npx @meldoc/mcp@latest auth login'
+                  message: 'Not authenticated. Run: npx @meldocio/mcp-stdio-proxy@latest auth login'
                 }, null, 2)
               }
             ]
@@ -772,7 +772,7 @@ async function handleToolsCall(request) {
         content: [
           {
             type: 'text',
-            text: 'To authenticate, run the following command:\n\nnpx @meldoc/mcp@latest auth login'
+            text: 'To authenticate, run the following command:\n\nnpx @meldocio/mcp-stdio-proxy@latest auth login'
           }
         ]
       }
@@ -808,7 +808,7 @@ async function processSingleRequest(request) {
   const tokenInfo = await getAccessToken();
   if (!tokenInfo) {
     sendError(request.id, CUSTOM_ERROR_CODES.AUTH_REQUIRED, 
-              'Meldoc token not found. Set MELDOC_ACCESS_TOKEN environment variable or run: npx @meldoc/mcp@latest auth login', {
+              'Meldoc token not found. Set MELDOC_ACCESS_TOKEN environment variable or run: npx @meldocio/mcp-stdio-proxy@latest auth login', {
                 code: 'AUTH_REQUIRED',
                 hint: 'Use meldoc.auth_login_instructions tool to get login command'
               });
@@ -942,7 +942,7 @@ async function processSingleRequest(request) {
         
         // Check for AUTH_REQUIRED error
         if (errorCode === 'AUTH_REQUIRED' || errorData.code === 'AUTH_REQUIRED') {
-          const message = 'Authentication required. Run: npx @meldoc/mcp@latest auth login';
+          const message = 'Authentication required. Run: npx @meldocio/mcp-stdio-proxy@latest auth login';
           sendError(request.id, CUSTOM_ERROR_CODES.AUTH_REQUIRED, message, {
             code: 'AUTH_REQUIRED',
             hint: 'Use auth_login_instructions tool to get login command'
@@ -1032,7 +1032,7 @@ async function processSingleRequest(request) {
       
       // Check for AUTH_REQUIRED
       if (errorCode === 'AUTH_REQUIRED' || errorData.code === 'AUTH_REQUIRED') {
-        const message = 'Authentication required. Run: npx @meldoc/mcp@latest auth login';
+        const message = 'Authentication required. Run: npx @meldocio/mcp-stdio-proxy@latest auth login';
         sendError(request.id, CUSTOM_ERROR_CODES.AUTH_REQUIRED, message, {
           code: 'AUTH_REQUIRED',
           hint: 'Use auth_login_instructions tool to get login command'
@@ -1105,7 +1105,7 @@ async function processSingleRequest(request) {
       
       // Check for AUTH_REQUIRED
       if (errorDataCode === 'AUTH_REQUIRED') {
-        const message = 'Authentication required. Run: npx @meldoc/mcp@latest auth login';
+        const message = 'Authentication required. Run: npx @meldocio/mcp-stdio-proxy@latest auth login';
         sendError(request.id, CUSTOM_ERROR_CODES.AUTH_REQUIRED, message, {
           code: 'AUTH_REQUIRED',
           hint: 'Use auth_login_instructions tool to get login command'

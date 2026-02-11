@@ -9,7 +9,7 @@ Authentication is required for Claude to access your Meldoc account. The tool pr
 The easiest and most secure way to authenticate:
 
 ```bash
-npx @meldoc/mcp@latest auth login
+npx @meldocio/mcp-stdio-proxy@latest auth login
 ```
 
 ### What Happens
@@ -57,7 +57,7 @@ export MELDOC_ACCESS_TOKEN=your_token_here
 Verify if you're logged in:
 
 ```bash
-npx @meldoc/mcp@latest auth status
+npx @meldocio/mcp-stdio-proxy@latest auth status
 ```
 
 **Expected output:**
@@ -73,7 +73,7 @@ Token expires: 2024-01-15T10:30:00Z
 To log out and clear saved credentials:
 
 ```bash
-npx @meldoc/mcp@latest auth logout
+npx @meldocio/mcp-stdio-proxy@latest auth logout
 ```
 
 This will:

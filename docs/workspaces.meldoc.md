@@ -18,7 +18,7 @@ The system selects a workspace in this priority order:
 See all workspaces you have access to:
 
 ```bash
-npx @meldoc/mcp@latest config list-workspaces
+npx @meldocio/mcp-stdio-proxy@latest config list-workspaces
 ```
 
 **Example output:**
@@ -35,7 +35,7 @@ Available workspaces:
 Set a workspace as your default:
 
 ```bash
-npx @meldoc/mcp@latest config set-workspace workspace-name
+npx @meldocio/mcp-stdio-proxy@latest config set-workspace workspace-name
 ```
 
 After setting a default, Claude will automatically use this workspace for all requests.
@@ -45,7 +45,7 @@ After setting a default, Claude will automatically use this workspace for all re
 Check which workspace is currently active:
 
 ```bash
-npx @meldoc/mcp@latest config get-workspace
+npx @meldocio/mcp-stdio-proxy@latest config get-workspace
 ```
 
 ## Project-Specific Workspace

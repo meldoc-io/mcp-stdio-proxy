@@ -13,13 +13,13 @@ Common issues and their solutions.
 1. **Check if you're logged in:**
 
    ```bash
-   npx @meldoc/mcp@latest auth status
+   npx @meldocio/mcp-stdio-proxy@latest auth status
    ```
 
 2. **If not logged in, authenticate:**
 
    ```bash
-   npx @meldoc/mcp@latest auth login
+   npx @meldocio/mcp-stdio-proxy@latest auth login
    ```
 
 3. **If using a token directly:**
@@ -41,13 +41,13 @@ Common issues and their solutions.
 1. **List available workspaces:**
 
    ```bash
-   npx @meldoc/mcp@latest config list-workspaces
+   npx @meldocio/mcp-stdio-proxy@latest config list-workspaces
    ```
 
 2. **Set a default workspace:**
 
    ```bash
-   npx @meldoc/mcp@latest config set-workspace workspace-name
+   npx @meldocio/mcp-stdio-proxy@latest config set-workspace workspace-name
    ```
 
 3. **Or create a project-specific config:**
@@ -68,13 +68,13 @@ Common issues and their solutions.
 1. **Re-authenticate:**
 
    ```bash
-   npx @meldoc/mcp@latest auth login
+   npx @meldocio/mcp-stdio-proxy@latest auth login
    ```
 
 2. **Check token status:**
 
    ```bash
-   npx @meldoc/mcp@latest auth status
+   npx @meldocio/mcp-stdio-proxy@latest auth status
    ```
 
 3. **If using manual token:**
@@ -152,7 +152,7 @@ Common issues and their solutions.
 1. **List available workspaces:**
 
    ```bash
-   npx @meldoc/mcp@latest config list-workspaces
+   npx @meldocio/mcp-stdio-proxy@latest config list-workspaces
    ```
 
 2. **Verify workspace name:**
@@ -181,8 +181,8 @@ Common issues and their solutions.
 2. **Re-authenticate:**
 
    ```bash
-   npx @meldoc/mcp@latest auth logout
-   npx @meldoc/mcp@latest auth login
+   npx @meldocio/mcp-stdio-proxy@latest auth logout
+   npx @meldocio/mcp-stdio-proxy@latest auth login
    ```
 
 3. **Check file permissions:**
@@ -195,7 +195,7 @@ Common issues and their solutions.
 
 ## Commands Not Found
 
-**Problem:** `npx @meldoc/mcp@latest` command not found.
+**Problem:** `npx @meldocio/mcp-stdio-proxy@latest` command not found.
 
 **Solutions:**
 

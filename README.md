@@ -65,7 +65,7 @@ Completely close and reopen Claude Desktop for the changes to take effect.
 Open a terminal and run:
 
 ```bash
-npx @meldoc/mcp@latest auth login
+npx @meldocio/mcp-stdio-proxy@latest auth login
 ```
 
 Follow the on-screen instructions - you'll need to open a link in your browser and enter a code.
@@ -81,7 +81,7 @@ For Claude to work with your documentation, you need to log in to your Meldoc ac
 The easiest way is to use the login command:
 
 ```bash
-npx @meldoc/mcp@latest auth login
+npx @meldocio/mcp-stdio-proxy@latest auth login
 ```
 
 **What will happen:**
@@ -128,7 +128,7 @@ export MELDOC_ACCESS_TOKEN=your_token_here
 To check if you're logged in:
 
 ```bash
-npx @meldoc/mcp@latest auth status
+npx @meldocio/mcp-stdio-proxy@latest auth status
 ```
 
 ### Logging out
@@ -136,7 +136,7 @@ npx @meldoc/mcp@latest auth status
 To log out and remove saved data:
 
 ```bash
-npx @meldoc/mcp@latest auth logout
+npx @meldocio/mcp-stdio-proxy@latest auth logout
 ```
 
 ### Automatic token refresh
@@ -159,8 +159,8 @@ Yes, but you need to switch between them using the `auth logout` and `auth login
 
 ### What to do if something doesn't work?
 
-1. Check that you're logged in: `npx @meldoc/mcp@latest auth status`
-2. Check workspace: `npx @meldoc/mcp@latest config get-workspace`
+1. Check that you're logged in: `npx @meldocio/mcp-stdio-proxy@latest auth status`
+2. Check workspace: `npx @meldocio/mcp-stdio-proxy@latest config get-workspace`
 3. See the "Troubleshooting" section above
 4. If nothing helps, create an issue on GitHub
 
@@ -190,13 +190,13 @@ When you ask Claude to do something with your documentation:
 
 ```bash
 # Log in to account (browser will open)
-npx @meldoc/mcp@latest auth login
+npx @meldocio/mcp-stdio-proxy@latest auth login
 
 # Check if you're logged in
-npx @meldoc/mcp@latest auth status
+npx @meldocio/mcp-stdio-proxy@latest auth status
 
 # Log out of account
-npx @meldoc/mcp@latest auth logout
+npx @meldocio/mcp-stdio-proxy@latest auth logout
 ```
 
 ### Workspace management commands
@@ -205,20 +205,20 @@ If you have multiple workspaces, you can manage them:
 
 ```bash
 # View all available workspaces
-npx @meldoc/mcp@latest config list-workspaces
+npx @meldocio/mcp-stdio-proxy@latest config list-workspaces
 
 # Set default workspace
-npx @meldoc/mcp@latest config set-workspace workspace-name
+npx @meldocio/mcp-stdio-proxy@latest config set-workspace workspace-name
 
 # View current workspace
-npx @meldoc/mcp@latest config get-workspace
+npx @meldocio/mcp-stdio-proxy@latest config get-workspace
 ```
 
 ### Help
 
 ```bash
 # Show all available commands
-npx @meldoc/mcp@latest help
+npx @meldocio/mcp-stdio-proxy@latest help
 ```
 
 ## Working with Workspaces
@@ -239,7 +239,7 @@ The system selects a workspace in this order:
 If you have multiple workspaces, set one as default:
 
 ```bash
-npx @meldoc/mcp@latest config set-workspace workspace-name
+npx @meldocio/mcp-stdio-proxy@latest config set-workspace workspace-name
 ```
 
 After this, Claude will automatically use this workspace.
@@ -303,13 +303,13 @@ Claude will automatically select the right tool and execute the request.
 1. Run the login command:
 
    ```bash
-   npx @meldoc/mcp@latest auth login
+   npx @meldocio/mcp-stdio-proxy@latest auth login
    ```
 
 2. Or check if you're logged in:
 
    ```bash
-   npx @meldoc/mcp@latest auth status
+   npx @meldocio/mcp-stdio-proxy@latest auth status
    ```
 
 3. If using a token directly, make sure it's specified in Claude Desktop configuration
@@ -323,13 +323,13 @@ If you have multiple workspaces, you need to specify which one to use:
 1. View the list of available workspaces:
 
    ```bash
-   npx @meldoc/mcp@latest config list-workspaces
+   npx @meldocio/mcp-stdio-proxy@latest config list-workspaces
    ```
 
 2. Set one as default:
 
    ```bash
-   npx @meldoc/mcp@latest config set-workspace workspace-name
+   npx @meldocio/mcp-stdio-proxy@latest config set-workspace workspace-name
    ```
 
 ### Error: "Invalid token" - invalid token
@@ -339,13 +339,13 @@ If you have multiple workspaces, you need to specify which one to use:
 1. If you used `auth login`, just log in again:
 
    ```bash
-   npx @meldoc/mcp@latest auth login
+   npx @meldocio/mcp-stdio-proxy@latest auth login
    ```
 
 2. Check status:
 
    ```bash
-   npx @meldoc/mcp@latest auth status
+   npx @meldocio/mcp-stdio-proxy@latest auth status
    ```
 
 3. If using a token manually, make sure it hasn't expired and is specified correctly

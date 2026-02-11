@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "meldoc": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@meldocio/mcp-stdio-proxy@latest"
+      ]
+    },
+    "meldoc-cli": {
+      "command": "meldoc",
+      "args": [
+        "mcp",
+        "serve",
+        "--cli-only",
+        "--env-file",
+        "${workspaceFolder}/.env"
+      ]
+    }
+  }
+}

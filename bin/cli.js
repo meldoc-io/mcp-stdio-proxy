@@ -64,7 +64,7 @@ async function handleAuthStatus() {
   if (!status || !status.authenticated) {
     logger.error('Not authenticated');
     console.log('\n' + logger.label('To authenticate, run:'));
-    console.log('  ' + logger.highlight('npx @meldoc/mcp auth login') + '\n');
+    console.log('  ' + logger.highlight('npx @meldocio/mcp-stdio-proxy auth login') + '\n');
     process.exit(1);
   }
   
@@ -99,7 +99,7 @@ function handleConfigSetWorkspace(alias) {
   if (!alias) {
     logger.error('Workspace alias is required');
     console.log('\n' + logger.label('Usage:'));
-    console.log('  ' + logger.highlight('npx @meldoc/mcp config set-workspace <alias>') + '\n');
+    console.log('  ' + logger.highlight('npx @meldocio/mcp-stdio-proxy config set-workspace <alias>') + '\n');
     process.exit(1);
   }
   
@@ -133,7 +133,7 @@ async function handleConfigListWorkspaces() {
     if (!tokenInfo) {
       logger.error('Not authenticated');
       console.log('\n' + logger.label('To authenticate, run:'));
-      console.log('  ' + logger.highlight('npx @meldoc/mcp auth login') + '\n');
+      console.log('  ' + logger.highlight('npx @meldocio/mcp-stdio-proxy auth login') + '\n');
       process.exit(1);
     }
     
@@ -184,7 +184,7 @@ async function handleConfigListWorkspaces() {
       if (errorData.code === 'AUTH_REQUIRED' || errorData.data?.code === 'AUTH_REQUIRED') {
         logger.error('Not authenticated');
         console.log('\n' + logger.label('To authenticate, run:'));
-        console.log('  ' + logger.highlight('npx @meldoc/mcp auth login') + '\n');
+        console.log('  ' + logger.highlight('npx @meldocio/mcp-stdio-proxy auth login') + '\n');
         process.exit(1);
       }
       logger.error(`Error: ${errorData.message || error.message}`);
@@ -234,9 +234,9 @@ function handleHelp() {
   console.log();
   
   console.log(logger.label('Examples:'));
-  console.log('  ' + logger.highlight('npx @meldoc/mcp auth login'));
-  console.log('  ' + logger.highlight('npx @meldoc/mcp config set-workspace my-workspace'));
-  console.log('  ' + logger.highlight('npx @meldoc/mcp config list-workspaces'));
+  console.log('  ' + logger.highlight('npx @meldocio/mcp-stdio-proxy auth login'));
+  console.log('  ' + logger.highlight('npx @meldocio/mcp-stdio-proxy config set-workspace my-workspace'));
+  console.log('  ' + logger.highlight('npx @meldocio/mcp-stdio-proxy config list-workspaces'));
   console.log();
   
   process.exit(0);
@@ -258,7 +258,7 @@ function showUsageHints() {
   console.log('  ' + logger.highlight('help') + '              - Show detailed help');
   console.log();
   console.log(logger.label('For more information, run:'));
-  console.log('  ' + logger.highlight('npx @meldoc/mcp help') + '\n');
+  console.log('  ' + logger.highlight('npx @meldocio/mcp-stdio-proxy help') + '\n');
   process.exit(0);
 }
 
@@ -290,7 +290,7 @@ async function main() {
     } else {
       logger.error(`Unknown auth command: ${subcommand}`);
       console.log('\n' + logger.label('Usage:'));
-      console.log('  ' + logger.highlight('npx @meldoc/mcp auth <login|status|logout>') + '\n');
+      console.log('  ' + logger.highlight('npx @meldocio/mcp-stdio-proxy auth <login|status|logout>') + '\n');
       process.exit(1);
     }
   } else if (command === 'config') {
@@ -303,7 +303,7 @@ async function main() {
     } else {
       logger.error(`Unknown config command: ${subcommand}`);
       console.log('\n' + logger.label('Usage:'));
-      console.log('  ' + logger.highlight('npx @meldoc/mcp config <set-workspace|get-workspace|list-workspaces>') + '\n');
+      console.log('  ' + logger.highlight('npx @meldocio/mcp-stdio-proxy config <set-workspace|get-workspace|list-workspaces>') + '\n');
       process.exit(1);
     }
   } else {
