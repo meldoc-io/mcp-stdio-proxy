@@ -1,6 +1,6 @@
 {
   "name": "@meldocio/mcp-stdio-proxy",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "MCP stdio proxy for meldoc - connects Claude Desktop to meldoc MCP API",
   "bin": {
     "meldoc-mcp": "bin/meldoc-mcp-proxy.js"
@@ -32,6 +32,9 @@
     "url": "https://github.com/meldoc/mcp-stdio-proxy/issues"
   },
   "homepage": "https://github.com/meldoc/mcp-stdio-proxy#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "axios": "^1.6.0",
     "chalk": "^4.1.2",
