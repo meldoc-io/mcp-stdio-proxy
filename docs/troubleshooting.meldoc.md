@@ -238,13 +238,13 @@ If you're still experiencing issues:
    - Active internet connection
 
 3. **Create an issue:**
-   - GitHub: <https://github.com/meldoc/mcp-stdio-proxy/issues>
+   - GitHub: [GitHub Issues](https://github.com/meldoc/mcp-stdio-proxy/issues)
    - Include error messages
    - Provide system information
    - Describe steps to reproduce
 
 ## Related
 
-- [Getting Started](getting-started.meldoc.md) - Initial setup
-- [Authentication](authentication.meldoc.md) - Authentication guide
-- [Workspaces](workspaces.meldoc.md) - Workspace management
+- [[getting-started]] - Initial setup
+- [[authentication]] - Authentication guide
+- [[workspaces]] - Workspace management

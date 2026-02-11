@@ -120,6 +120,6 @@ npm run test:local
 
 ## Related
 
-- [Authentication](authentication.meldoc.md) - Authentication methods
-- [Workspaces](workspaces.meldoc.md) - Workspace management
-- [Troubleshooting](troubleshooting.meldoc.md) - Common issues
+- [[authentication]] - Authentication methods
+- [[workspaces]] - Workspace management
+- [[troubleshooting]] - Common issues

@@ -31,20 +31,20 @@ Everything happens automatically in the background - you just ask Claude natural
 
 ## Quick Navigation
 
-- [Getting Started](getting-started.meldoc.md) - Set up Meldoc MCP in 4 simple steps
-- [Authentication](authentication.meldoc.md) - Learn how to log in and manage credentials
-- [Workspaces](workspaces.meldoc.md) - Understand and manage workspaces
-- [Commands](commands.meldoc.md) - Complete CLI command reference
-- [Claude Integration](claude-integration.meldoc.md) - Available MCP tools and capabilities
-- [Troubleshooting](troubleshooting.meldoc.md) - Common issues and solutions
-- [Advanced Usage](advanced.meldoc.md) - Configuration files, environment variables, and best practices
-- [Requirements](requirements.meldoc.md) - System and account requirements
+- [[getting-started]] - Set up Meldoc MCP in 4 simple steps
+- [[authentication]] - Learn how to log in and manage credentials
+- [[workspaces]] - Understand and manage workspaces
+- [[commands]] - Complete CLI command reference
+- [[claude-integration]] - Available MCP tools and capabilities
+- [[troubleshooting]] - Common issues and solutions
+- [[advanced]] - Configuration files, environment variables, and best practices
+- [[requirements]] - System and account requirements
 
 ## Support
 
-- **GitHub Issues:** <https://github.com/meldoc-io/mcp-stdio-proxy/issues>
-- **Documentation:** <https://docs.meldoc.io>
-- **Meldoc Website:** <https://app.meldoc.io>
+- **GitHub Issues:** [GitHub Issues](https://github.com/meldoc-io/mcp-stdio-proxy/issues)
+- **Documentation:** [Meldoc Documentation](https://docs.meldoc.io)
+- **Meldoc Website:** [Meldoc App](https://app.meldoc.io)
 
 ## Related Documentation
 

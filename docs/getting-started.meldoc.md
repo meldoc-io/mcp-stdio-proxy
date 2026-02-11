@@ -6,67 +6,100 @@ Get up and running with Meldoc MCP in just 2 steps!
 
 ## Quick Start (Automatic Installation) ✨
 
-The easiest way to set up Meldoc MCP:
+Choose the command that matches your MCP client:
 
-1. **Run the installer:**
+**Claude Desktop** (default):
 
-   ```bash
-   npx @meldocio/mcp-stdio-proxy@latest install
-   ```
+```bash
+npx @meldocio/mcp-stdio-proxy@latest install
+```
 
-2. **Restart Claude Desktop** (completely close and reopen)
+**Cursor IDE** - project-specific (recommended) or global:
 
-3. **Authenticate:**
+```bash
+npx @meldocio/mcp-stdio-proxy@latest install cursor          # Project-specific
+npx @meldocio/mcp-stdio-proxy@latest install cursor-global   # Global
+```
 
-   ```bash
-   npx @meldocio/mcp-stdio-proxy@latest auth login
-   ```
+**Claude Code** - project, user, or local scope:
 
-Done! 🎉 Claude can now access your Meldoc documentation.
+```bash
+npx @meldocio/mcp-stdio-proxy@latest install claude-code         # Project scope (shared with team)
+npx @meldocio/mcp-stdio-proxy@latest install claude-code-user    # User scope (all projects)
+npx @meldocio/mcp-stdio-proxy@latest install claude-code-local  # Local scope (private to you)
+```
+
+**Any MCP client** - create local `mcp.json` file:
+
+```bash
+npx @meldocio/mcp-stdio-proxy@latest install --local
+```
+
+After installation, restart your MCP client and authenticate:
+
+```bash
+npx @meldocio/mcp-stdio-proxy@latest auth login
+```
+
+### Example Output
+
+When you run the install command, you'll see something like this:
+
+```text
+🚀 Installing Meldoc MCP for Claude Desktop
+
+Config file location: ~/Library/Application Support/Claude/claude_desktop_config.json
+
+Found existing Claude Desktop configuration
+Configuration added successfully!
+
+Added MCP server configuration:
+  {
+    "command": "npx",
+    "args": ["-y", "@meldocio/mcp-stdio-proxy@latest"]
+  }
+
+✅ Installation Complete!
+
+Next steps:
+
+  1. Restart Claude Desktop
+     Completely close and reopen Claude Desktop for changes to take effect.
+
+  2. Authenticate with Meldoc
+     Run: npx @meldocio/mcp-stdio-proxy auth login
+
+  3. Start using Claude with Meldoc!
+     Ask Claude to read, search, or update your documentation.
+```
 
 ### Uninstalling
 
-To remove Meldoc MCP from Claude Desktop:
+**Claude Desktop:**
 
 ```bash
 npx @meldocio/mcp-stdio-proxy@latest uninstall
 ```
 
-After running `uninstall`, restart Claude Desktop for changes to take effect.
+**Other clients:** Manually remove the `meldoc` entry from your MCP configuration file, then restart your client.
 
 ---
 
 ## Manual Installation
 
-If you prefer to configure manually, follow these steps:
+If you prefer to configure manually, add this configuration to your MCP client's config file:
 
-### Step 1: Configure Claude Desktop
+**Claude Desktop** - `claude_desktop_config.json`:
 
-Find and open your Claude Desktop configuration file:
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+- Linux: `~/.config/Claude/claude_desktop_config.json`
 
-**macOS:**
+**Cursor IDE** - `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global)
 
-```text
-~/Library/Application Support/Claude/claude_desktop_config.json
-```
+**Claude Code** - `.mcp.json` (project), `~/.claude.json` (user/local)
 
-**Windows:**
-
-```text
-%APPDATA%\Claude\claude_desktop_config.json
-```
-
-**Linux:**
-
-```text
-~/.config/Claude/claude_desktop_config.json
-```
-
-> 💡 **Tip:** If the file doesn't exist, create it. Make sure the directory exists first.
-
-## Step 2: Add Meldoc Configuration
-
-Add this configuration to your `claude_desktop_config.json`:
+**Configuration to add:**
 
 ```json
 {
@@ -79,36 +112,29 @@ Add this configuration to your `claude_desktop_config.json`:
 }
 ```
 
-> ⚠️ **Important:** If you already have other MCP servers configured, just add `"meldoc"` to the existing `mcpServers` object.
+> **Note:** For Claude Code, add `"type": "stdio"` to the configuration. If you already have other MCP servers, just add `"meldoc"` to the existing `mcpServers` object.
 
-## Step 3: Restart Claude Desktop
+After adding the configuration, restart your MCP client.
 
-**Completely close and reopen** Claude Desktop for the configuration to take effect.
+## Authentication
 
-## Step 4: Authenticate
-
-Open your terminal and run:
+After installation, authenticate with Meldoc:
 
 ```bash
 npx @meldocio/mcp-stdio-proxy@latest auth login
 ```
 
-Follow the on-screen instructions:
+You'll see a URL and code in your terminal. Open the URL in your browser, enter the code, and you're done! Your credentials are saved automatically.
 
-1. A URL and code will appear in your terminal
-2. Open the URL in your browser
-3. Enter the code on the Meldoc website
-4. Done! Your credentials are saved automatically
-
-🎉 **Congratulations!** You're all set. Claude can now access your Meldoc documentation.
+🎉 **That's it!** Your MCP client can now access your Meldoc documentation.
 
 ## Next Steps
 
-- Learn about [authentication](authentication.meldoc.md) methods
-- Understand [workspace management](workspaces.meldoc.md)
-- Explore [available commands](commands.meldoc.md)
-- See what Claude can do with [Claude integration](claude-integration.meldoc.md)
+- Learn about [[authentication]] methods
+- Understand [[workspaces]] management
+- Explore [[commands]]
+- See what Claude can do with [[claude-integration]]
 
 ## Troubleshooting
 
-If you encounter any issues during setup, check the [troubleshooting guide](troubleshooting.meldoc.md).
+If you encounter any issues during setup, check the [[troubleshooting]] guide.

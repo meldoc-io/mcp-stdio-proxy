@@ -94,6 +94,6 @@ When using `auth login`, tokens are automatically refreshed **5 minutes before e
 
 ## Related
 
-- [Commands Reference](commands.meldoc.md) - Complete list of authentication commands
-- [Troubleshooting](troubleshooting.meldoc.md) - Fix authentication issues
-- [Advanced Usage](advanced.meldoc.md) - Configuration files and security
+- [[commands]] - Complete list of authentication commands
+- [[troubleshooting]] - Fix authentication issues
+- [[advanced]] - Configuration files and security

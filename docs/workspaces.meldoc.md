@@ -21,10 +21,10 @@ You can ask the AI assistant to work with a specific workspace using natural lan
 
 **Examples:**
 
-- "Use the 'company-workspace' workspace for this task"
-- "Switch to workspace 'project-alpha'"
-- "Work in the 'my-personal-workspace' workspace"
-- "Please use workspace 'team-docs' for this operation"
+> "Use the 'company-workspace' workspace for this task"
+> "Switch to workspace 'project-alpha'"
+> "Work in the 'my-personal-workspace' workspace"
+> "Please use workspace 'team-docs' for this operation"
 
 The AI will understand your request and automatically select the specified workspace for subsequent operations.
 
@@ -38,7 +38,7 @@ npx @meldocio/mcp-stdio-proxy@latest config list-workspaces
 
 **Example output:**
 
-```
+```text
 Available workspaces:
   - my-personal-workspace
   - company-workspace
@@ -75,6 +75,6 @@ When working from this project directory (or when MCP is used in a git repositor
 
 ## Related
 
-- [Commands Reference](commands.meldoc.md) - Workspace management commands
-- [Troubleshooting](troubleshooting.meldoc.md) - Fix workspace selection issues
-- [Advanced Usage](advanced.meldoc.md) - Configuration files
+- [[commands]] - Workspace management commands
+- [[troubleshooting]] - Fix workspace selection issues
+- [[advanced]] - Configuration files

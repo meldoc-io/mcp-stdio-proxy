@@ -16,7 +16,7 @@ npx @meldocio/mcp-stdio-proxy@latest auth login
 
 Opens a browser-based authentication flow. Credentials are saved automatically.
 
-**See also:** [Authentication Guide](authentication.meldoc.md)
+**See also:** [[authentication]]
 
 ### `auth status`
 
@@ -50,7 +50,7 @@ Set the default workspace alias.
 npx @meldocio/mcp-stdio-proxy@latest config set-workspace my-workspace
 ```
 
-**See also:** [Workspace Management](workspaces.meldoc.md)
+**See also:** [[workspaces]]
 
 ### `config get-workspace`
 
@@ -80,6 +80,6 @@ npx @meldocio/mcp-stdio-proxy@latest help
 
 ## Related
 
-- [Getting Started](getting-started.meldoc.md) - Initial setup
-- [Authentication](authentication.meldoc.md) - Authentication methods
-- [Workspaces](workspaces.meldoc.md) - Workspace management
+- [[getting-started]] - Initial setup
+- [[authentication]] - Authentication methods
+- [[workspaces]] - Workspace management
