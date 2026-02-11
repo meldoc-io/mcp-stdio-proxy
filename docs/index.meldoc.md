@@ -42,7 +42,7 @@ Everything happens automatically in the background - you just ask Claude natural
 
 ## Support
 
-- **GitHub Issues:** <https://github.com/meldoc/mcp-stdio-proxy/issues>
+- **GitHub Issues:** <https://github.com/meldoc-io/mcp-stdio-proxy/issues>
 - **Documentation:** <https://docs.meldoc.io>
 - **Meldoc Website:** <https://app.meldoc.io>
 
