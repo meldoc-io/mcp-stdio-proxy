@@ -587,9 +587,18 @@ async function main() {
       process.exit(1);
     }
   } else {
-    // Unknown command - might be for main proxy
-    // Return control to main proxy handler
-    return;
+    // Unknown command
+    logger.error(`Unknown command: ${command}`);
+    console.log('\n' + logger.label('Available commands:'));
+    console.log('  ' + logger.highlight('install') + '        - Configure Claude Desktop');
+    console.log('  ' + logger.highlight('uninstall') + '      - Remove configuration');
+    console.log('  ' + logger.highlight('auth') + ' <cmd>      - Authentication commands');
+    console.log('  ' + logger.highlight('config') + ' <cmd>    - Configuration commands');
+    console.log('  ' + logger.highlight('help') + '           - Show help');
+    console.log();
+    console.log(logger.label('Run') + ' ' + logger.highlight('npx @meldocio/mcp-stdio-proxy help') + ' ' + logger.label('for more information'));
+    console.log();
+    process.exit(1);
   }
 }
 

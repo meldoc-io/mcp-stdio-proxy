@@ -9,11 +9,15 @@ const chalk = require('chalk');
 
 // Check for CLI commands first
 const args = process.argv.slice(2);
-if (args.length > 0 && (args[0] === 'auth' || args[0] === 'config')) {
+if (args.length > 0) {
+  const command = args[0];
   // Handle CLI commands - cli.js will handle and exit
-  require('./cli');
-  // Don't exit here - cli.js will handle process.exit() after async operations complete
-  return;
+  if (command === 'auth' || command === 'config' || command === 'install' || 
+      command === 'uninstall' || command === 'help' || command === '--help' || command === '-h') {
+    require('./cli');
+    // Don't exit here - cli.js will handle process.exit() after async operations complete
+    return;
+  }
 }
 
 // Get package info - try multiple paths for different installation scenarios
