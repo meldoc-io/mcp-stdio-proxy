@@ -1,13 +1,15 @@
 {
   "name": "@meldocio/mcp-stdio-proxy",
-  "version": "1.0.20",
-  "description": "MCP stdio proxy for meldoc - connects Claude Desktop to meldoc MCP API",
+  "version": "1.0.21",
+  "description": "MCP stdio proxy for meldoc - connects Claude Desktop and Claude Code to meldoc MCP API",
   "bin": {
     "meldoc-mcp": "bin/meldoc-mcp-proxy.js"
   },
   "files": [
     "bin/**",
     "lib/**",
+    ".claude-plugin/**",
+    ".mcp.json",
     "README.md",
     "LICENSE"
   ],
@@ -18,6 +20,7 @@
     "mcp",
     "meldoc",
     "claude",
+    "claude-code",
     "stdio",
     "proxy",
     "json-rpc"

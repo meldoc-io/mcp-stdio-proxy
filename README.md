@@ -1,9 +1,9 @@
-# Meldoc MCP for Claude Desktop
+# Meldoc MCP for Claude Desktop & Claude Code
 
 [![npm version](https://badge.fury.io/js/@meldocio%2Fmcp-stdio-proxy.svg)](https://www.npmjs.com/package/@meldocio/mcp-stdio-proxy)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-This package allows you to connect Claude Desktop to your Meldoc account, so you can use all your documentation directly in Claude.
+This package allows you to connect Claude Desktop and Claude Code to your Meldoc account, so you can use all your documentation directly in Claude.
 
 ## 🚀 Quick Start - Install from Claude Marketplace
 
@@ -19,21 +19,21 @@ claude plugin install meldoc-mcp@meldoc-mcp
 
 After installation:
 
-1. Restart Claude Desktop (or your MCP client)
+1. Restart Claude Desktop or Claude Code
 2. Run `npx @meldocio/mcp-stdio-proxy@latest auth login` to authenticate
 
 Done! 🎉 Now you can ask Claude to work with your Meldoc documentation.
 
 ## What is this?
 
-This is a bridge between Claude Desktop and Meldoc. After setup, Claude will be able to:
+This is a bridge between Claude (Desktop & Code) and Meldoc. After setup, Claude will be able to:
 
 - 📖 Read your documentation from Meldoc
 - 🔍 Search through documents
 - ✏️ Create and update documents (if you have permissions)
 - 📁 Work with projects and workspaces
 
-**No additional installation required** - everything works automatically through Claude Desktop.
+**No additional installation required** - everything works automatically through Claude Desktop and Claude Code.
 
 ## Installation
 
