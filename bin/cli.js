@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { deviceFlowLogin } = require('../lib/device-flow');
+const { interactiveLogin } = require('../lib/device-flow');
 const { readCredentials, deleteCredentials } = require('../lib/credentials');
 const { getAuthStatus } = require('../lib/auth');
 const { setWorkspaceAlias, getWorkspaceAlias } = require('../lib/config');
@@ -30,31 +30,15 @@ if (process.env.MELDOC_APP_URL) {
  */
 async function handleAuthLogin() {
   try {
-    logger.section('🔐 Authentication');
-    await deviceFlowLogin(
-      (url, code) => {
-        console.log('\n' + logger.label('Visit this URL:'));
-        console.log('  ' + logger.url(url));
-        console.log('\n' + logger.label('Enter this code:'));
-        console.log('  ' + logger.code(code) + '\n');
-        logger.info('Waiting for authentication...');
-      },
-      (status) => {
-        if (status === 'denied') {
-          logger.error('Login denied by user');
-          process.exit(1);
-        } else if (status === 'expired') {
-          logger.error('Authentication code expired');
-          process.exit(1);
-        }
-      },
-      API_URL,
-      APP_URL
-    );
-    logger.success('Login successful!');
+    await interactiveLogin({
+      autoOpen: true,
+      showQR: false,
+      timeout: 120000,
+      apiBaseUrl: API_URL,
+      appUrl: APP_URL
+    });
     process.exit(0);
   } catch (error) {
-    logger.error(`Login failed: ${error.message}`);
     process.exit(1);
   }
 }

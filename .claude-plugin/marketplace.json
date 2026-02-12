@@ -11,7 +11,7 @@
         "source": "github",
         "repo": "meldoc-io/mcp-stdio-proxy"
       },
-      "version": "1.0.19",
+      "version": "1.0.20",
       "description": "Connect Claude Desktop and other MCP clients to your Meldoc documentation workspace. Read, search, create, and update your documentation directly from AI conversations.",
       "category": "productivity",
       "keywords": [

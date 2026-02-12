@@ -66,14 +66,20 @@ const LOG_LEVELS = {
 // Import new auth and workspace modules
 const { getAccessToken, getAuthStatus } = require('../lib/auth');
 const { resolveWorkspaceAlias } = require('../lib/workspace');
-const { getApiUrl } = require('../lib/constants');
+const { getApiUrl, getAppUrl } = require('../lib/constants');
 const { setWorkspaceAlias, getWorkspaceAlias } = require('../lib/config');
+const { interactiveLogin, canOpenBrowser } = require('../lib/device-flow');
 
 // Configuration
 const apiUrl = getApiUrl();
+const appUrl = getAppUrl();
 const rpcEndpoint = `${apiUrl}/mcp/v1/rpc`;
 const REQUEST_TIMEOUT = 25000; // 25 seconds (less than Claude Desktop's 30s timeout)
 const LOG_LEVEL = getLogLevel(process.env.LOG_LEVEL || 'ERROR');
+
+// Track if we've attempted auto-authentication
+let autoAuthAttempted = false;
+let autoAuthInProgress = false;
 
 // Get log level from environment
 function getLogLevel(level) {
@@ -804,12 +810,73 @@ async function handleToolsCall(request) {
 }
 
 /**
+ * Attempt automatic authentication if conditions are met
+ * @returns {Promise<boolean>} True if authentication was attempted and succeeded
+ */
+async function attemptAutoAuth() {
+  // Only attempt once per session
+  if (autoAuthAttempted || autoAuthInProgress) {
+    return false;
+  }
+  
+  // Only in interactive mode (TTY) and not in CI
+  if (!canOpenBrowser()) {
+    return false;
+  }
+  
+  // Check if NO_AUTO_AUTH is set
+  if (process.env.NO_AUTO_AUTH === '1' || process.env.NO_AUTO_AUTH === 'true') {
+    return false;
+  }
+  
+  // Check if token already exists
+  const tokenInfo = await getAccessToken();
+  if (tokenInfo) {
+    return false;
+  }
+  
+  autoAuthAttempted = true;
+  autoAuthInProgress = true;
+  
+  try {
+    log(LOG_LEVELS.INFO, '🔐 First time setup - authentication required');
+    process.stderr.write('\n');
+    
+    await interactiveLogin({
+      autoOpen: true,
+      showQR: false,
+      timeout: 120000,
+      apiBaseUrl: apiUrl,
+      appUrl: appUrl
+    });
+    
+    autoAuthInProgress = false;
+    return true;
+  } catch (error) {
+    autoAuthInProgress = false;
+    log(LOG_LEVELS.WARN, `Auto-authentication failed: ${error.message}`);
+    log(LOG_LEVELS.INFO, 'You can authenticate manually: npx @meldocio/mcp-stdio-proxy@latest auth login');
+    return false;
+  }
+}
+
+/**
  * Process a single JSON-RPC request
  * Forwards the request to the backend MCP API
  */
 async function processSingleRequest(request) {
   // Get access token with priority and auto-refresh
-  const tokenInfo = await getAccessToken();
+  let tokenInfo = await getAccessToken();
+  
+  // If no token and we haven't attempted auto-auth, try it
+  if (!tokenInfo && !autoAuthAttempted && !autoAuthInProgress) {
+    const authSucceeded = await attemptAutoAuth();
+    if (authSucceeded) {
+      // Retry getting token after successful auth
+      tokenInfo = await getAccessToken();
+    }
+  }
+  
   if (!tokenInfo) {
     sendError(request.id, CUSTOM_ERROR_CODES.AUTH_REQUIRED, 
               'Meldoc token not found. Set MELDOC_ACCESS_TOKEN environment variable or run: npx @meldocio/mcp-stdio-proxy@latest auth login', {
