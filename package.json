@@ -42,12 +42,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/meldoc/mcp-stdio-proxy.git"
+    "url": "git+https://github.com/meldoc-io/mcp-stdio-proxy.git"
   },
   "bugs": {
-    "url": "https://github.com/meldoc/mcp-stdio-proxy/issues"
+    "url": "https://github.com/meldoc-io/mcp-stdio-proxy/issues"
   },
-  "homepage": "https://github.com/meldoc/mcp-stdio-proxy#readme",
+  "homepage": "https://github.com/meldoc-io/mcp-stdio-proxy#readme",
   "publishConfig": {
     "access": "public"
   },

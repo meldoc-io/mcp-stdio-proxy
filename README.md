@@ -24,10 +24,10 @@ The easiest way to install Meldoc MCP is through the Claude Marketplace:
 
 ```bash
 # Add the marketplace
-claude plugin marketplace add meldoc/mcp-stdio-proxy
+claude plugin marketplace add meldoc-io/mcp-stdio-proxy
 
 # Install the plugin
-claude plugin install meldoc-mcp@meldoc
+claude plugin install meldoc-mcp@meldoc-io
 ```
 
 After installation:
@@ -481,7 +481,7 @@ If you're experiencing connection errors:
 ### Setup
 
 ```bash
-git clone https://github.com/meldoc/mcp-stdio-proxy.git
+git clone https://github.com/meldoc-io/mcp-stdio-proxy.git
 cd mcp-stdio-proxy
 npm install
 ```
@@ -545,7 +545,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 For issues, questions, or contributions, please visit:
 
-- GitHub Issues: <https://github.com/meldoc/mcp-stdio-proxy/issues>
+- GitHub Issues: <https://github.com/meldoc-io/mcp-stdio-proxy/issues>
 - Documentation: <https://docs.meldoc.io>
 
 ## Related
