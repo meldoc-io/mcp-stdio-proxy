@@ -2,18 +2,9 @@
   "name": "meldoc-mcp",
   "version": "1.0.19",
   "description": "MCP server that connects Claude Desktop and other MCP clients to your Meldoc documentation workspace. Enables AI assistants to read, search, create, and update your documentation through the Model Context Protocol.",
-  "author": "Meldoc",
-  "homepage": "https://github.com/meldoc-io/mcp-stdio-proxy",
-  "mcp": {
-    "command": "npx",
-    "args": [
-      "-y",
-      "@meldocio/mcp-stdio-proxy@latest"
-    ],
-    "env": {}
+  "author": {
+    "name": "Meldoc",
+    "email": "support@meldoc.io"
   },
-  "permissions": {
-    "network": true,
-    "filesystem": false
-  }
+  "homepage": "https://github.com/meldoc-io/mcp-stdio-proxy"
 }

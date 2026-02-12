@@ -27,7 +27,7 @@ The easiest way to install Meldoc MCP is through the Claude Marketplace:
 claude plugin marketplace add meldoc-io/mcp-stdio-proxy
 
 # Install the plugin
-claude plugin install meldoc-mcp@meldoc-io
+claude plugin install meldoc-mcp@meldoc-mcp
 ```
 
 After installation:
