@@ -1,0 +1,6 @@
+{
+  "meldoc-mcp": {
+    "command": "npx",
+    "args": ["-y", "@meldocio/mcp-stdio-proxy@latest"]
+  }
+}

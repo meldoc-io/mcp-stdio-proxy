@@ -1,7 +1,7 @@
 {
   "name": "meldoc-mcp",
-  "version": "1.0.20",
-  "description": "MCP server that connects Claude Desktop and other MCP clients to your Meldoc documentation workspace. Enables AI assistants to read, search, create, and update your documentation through the Model Context Protocol.",
+  "version": "1.0.21",
+  "description": "Connect Claude Desktop, Claude Code, and other MCP clients to your Meldoc documentation workspace. Read, search, create, and update your documentation directly from AI conversations through the Model Context Protocol.",
   "author": {
     "name": "Meldoc",
     "email": "support@meldoc.io"
