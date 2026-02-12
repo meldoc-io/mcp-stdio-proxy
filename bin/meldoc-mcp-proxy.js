@@ -604,6 +604,16 @@ function getToolsList() {
         type: 'object',
         properties: {}
       }
+    },
+    {
+      name: 'auth_login',
+      description: 'Start interactive login process. Opens browser for authentication. This is equivalent to running: npx @meldocio/mcp-stdio-proxy@latest auth login',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          timeout: { type: 'integer', description: 'Timeout in milliseconds (default: 120000)' }
+        }
+      }
     }
   ];
 }
@@ -793,7 +803,88 @@ async function handleToolsCall(request) {
     }
     return;
   }
-  
+
+  if (toolName === 'auth_login') {
+    try {
+      const timeout = arguments_.timeout || 120000;
+
+      // Check if we can open browser
+      if (!canOpenBrowser()) {
+        const response = {
+          jsonrpc: '2.0',
+          id: request.id,
+          result: {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  success: false,
+                  error: 'Cannot open browser automatically. Please run the command manually: npx @meldocio/mcp-stdio-proxy@latest auth login'
+                }, null, 2)
+              }
+            ]
+          }
+        };
+        process.stdout.write(JSON.stringify(response) + '\n');
+        if (process.stdout.isTTY) {
+          process.stdout.flush();
+        }
+        return;
+      }
+
+      // Start interactive login
+      await interactiveLogin({
+        autoOpen: true,
+        showQR: false,
+        timeout: timeout,
+        apiBaseUrl: apiUrl,
+        appUrl: appUrl
+      });
+
+      const response = {
+        jsonrpc: '2.0',
+        id: request.id,
+        result: {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                success: true,
+                message: 'Authentication successful! You are now logged in to Meldoc.'
+              }, null, 2)
+            }
+          ]
+        }
+      };
+      process.stdout.write(JSON.stringify(response) + '\n');
+      if (process.stdout.isTTY) {
+        process.stdout.flush();
+      }
+    } catch (error) {
+      const response = {
+        jsonrpc: '2.0',
+        id: request.id,
+        result: {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                success: false,
+                error: error.message || 'Authentication failed',
+                hint: 'You can try again or run: npx @meldocio/mcp-stdio-proxy@latest auth login'
+              }, null, 2)
+            }
+          ]
+        }
+      };
+      process.stdout.write(JSON.stringify(response) + '\n');
+      if (process.stdout.isTTY) {
+        process.stdout.flush();
+      }
+    }
+    return;
+  }
+
   // All other tools are forwarded to backend
   log(LOG_LEVELS.DEBUG, `Forwarding tool ${toolName} to backend (not a local tool)`);
   await processSingleRequest(request);

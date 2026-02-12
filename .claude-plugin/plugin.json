@@ -1,6 +1,6 @@
 {
   "name": "meldoc-mcp",
-  "version": "1.0.21",
+  "version": "1.0.22",
   "description": "Connect Claude Desktop, Claude Code, and other MCP clients to your Meldoc documentation workspace. Read, search, create, and update your documentation directly from AI conversations through the Model Context Protocol.",
   "author": {
     "name": "Meldoc",
