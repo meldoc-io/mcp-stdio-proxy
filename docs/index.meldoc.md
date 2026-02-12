@@ -4,6 +4,26 @@ title: Meldoc MCP
 ---
 **Meldoc MCP** is a powerful bridge that connects MCP-compatible clients to your Meldoc account, enabling seamless access to your documentation directly within AI conversations.
 
+## 🚀 Quick Start - Install from Claude Marketplace
+
+The easiest way to install Meldoc MCP is through the Claude Marketplace:
+
+```bash
+# Add the marketplace
+claude plugin marketplace add meldoc-io/mcp-stdio-proxy
+
+# Install the plugin
+claude plugin install meldoc-mcp@meldoc-mcp
+```
+
+After installation, restart your MCP client and authenticate:
+
+```bash
+npx @meldocio/mcp-stdio-proxy@latest auth login
+```
+
+Done! 🎉 Now you can ask Claude to work with your Meldoc documentation.
+
 ## Overview
 
 Meldoc MCP allows AI assistants (Claude Desktop, Cursor IDE, Claude Code, and other MCP clients) to interact with your Meldoc documentation through the Model Context Protocol (MCP). Once configured, you can ask your AI assistant to read, search, create, and update your documentation naturally.

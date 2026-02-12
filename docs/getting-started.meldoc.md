@@ -4,9 +4,30 @@ title: Getting Started
 ---
 Get up and running with Meldoc MCP in just 2 steps!
 
+## 🚀 Quick Start - Install from Claude Marketplace (Easiest)
+
+The easiest way to install Meldoc MCP is through the Claude Marketplace:
+
+```bash
+# Add the marketplace
+claude plugin marketplace add meldoc-io/mcp-stdio-proxy
+
+# Install the plugin
+claude plugin install meldoc-mcp@meldoc-mcp
+```
+
+After installation:
+
+1. Restart Claude Desktop (or your MCP client)
+2. Run `npx @meldocio/mcp-stdio-proxy@latest auth login` to authenticate
+
+Done! 🎉 Now you can ask Claude to work with your Meldoc documentation.
+
+---
+
 ## Quick Start (Automatic Installation) ✨
 
-Choose the command that matches your MCP client:
+Alternatively, you can install manually. Choose the command that matches your MCP client:
 
 **Claude Desktop** (default):
 

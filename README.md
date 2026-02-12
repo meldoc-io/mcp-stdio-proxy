@@ -5,20 +5,7 @@
 
 This package allows you to connect Claude Desktop to your Meldoc account, so you can use all your documentation directly in Claude.
 
-## What is this?
-
-This is a bridge between Claude Desktop and Meldoc. After setup, Claude will be able to:
-
-- 📖 Read your documentation from Meldoc
-- 🔍 Search through documents
-- ✏️ Create and update documents (if you have permissions)
-- 📁 Work with projects and workspaces
-
-**No additional installation required** - everything works automatically through Claude Desktop.
-
-## Installation
-
-### Via Claude Marketplace (Recommended) 🚀
+## 🚀 Quick Start - Install from Claude Marketplace
 
 The easiest way to install Meldoc MCP is through the Claude Marketplace:
 
@@ -34,6 +21,25 @@ After installation:
 
 1. Restart Claude Desktop (or your MCP client)
 2. Run `npx @meldocio/mcp-stdio-proxy@latest auth login` to authenticate
+
+Done! 🎉 Now you can ask Claude to work with your Meldoc documentation.
+
+## What is this?
+
+This is a bridge between Claude Desktop and Meldoc. After setup, Claude will be able to:
+
+- 📖 Read your documentation from Meldoc
+- 🔍 Search through documents
+- ✏️ Create and update documents (if you have permissions)
+- 📁 Work with projects and workspaces
+
+**No additional installation required** - everything works automatically through Claude Desktop.
+
+## Installation
+
+### Via Claude Marketplace (Recommended) 🚀
+
+See [Quick Start](#-quick-start---install-from-claude-marketplace) section above for the easiest installation method.
 
 ### Via NPM
 
