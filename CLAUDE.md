@@ -14,7 +14,7 @@ This repository uses **Meldoc** for living, code-adjacent documentation.
 - **Source code is never uploaded or modified automatically.**
 
 Official Meldoc documentation:
-https://public.meldoc.io/meldoc
+<https://public.meldoc.io/meldoc>
 
 Meldoc documentation is treated as **infrastructure**, not prose.
 
@@ -34,6 +34,7 @@ Do **not** guess structure or intent.
 ## Think before acting
 
 Before any change, determine:
+
 1. Text-only vs structural change
 2. Single-file vs multi-file impact
 3. Identifier / hierarchy / visibility changes
@@ -45,6 +46,7 @@ If unclear — **stop and ask**.
 ## Absolute rules
 
 ### Always
+
 - Treat `alias` as a **stable identifier**, not a slug.
 - Prefer **small, local, incremental changes**.
 - Preserve existing structure and intent.
@@ -53,12 +55,14 @@ If unclear — **stop and ask**.
   - `cli_validate` before publishing
 
 ### Ask first
+
 - Before touching multiple documents
 - Before changing hierarchy or exposure
 - Before renaming, moving, or deleting anything
 - Before affecting published or public docs
 
 ### Never
+
 - Never delete `*.meldoc.md` files
 - Never invent frontmatter fields
 - Never mass-rename aliases
@@ -75,12 +79,15 @@ If unclear — **stop and ask**.
 ### Frontmatter
 
 Required:
+
 - `title`
 
 Required for publish:
+
 - `alias` (unique, kebab-case, stable)
 
 Optional:
+
 - `parentAlias` / `parent_alias`
 - `workflow`: `draft | published`
 - `visibility`: `visible | hidden`
@@ -104,10 +111,12 @@ Bad documentation is worse than missing documentation.
 ## MCP tool usage
 
 ### Docs tools (read-only)
+
 - Use `docs_search` to find context
 - Use `docs_get` only when you know the document
 
 ### CLI tools (state-changing)
+
 - Run `cli_scan` only for structural changes
 - Always run `cli_validate` before publish
 - Use `cli_publish` with `dryRun` unless told otherwise
@@ -116,11 +125,13 @@ Bad documentation is worse than missing documentation.
 ### Important: CLI Tools vs MCP Direct Tools
 
 **CLI Tools** (`cli_publish`, `cli_pull`, `cli_migrate`):
+
 - Metadata (title, alias, parentAlias, workflow, visibility, exposure) must be specified in **YAML frontmatter** of files
 - Document title should **NOT** be included in markdown content (do not use H1 #)
 - Title is specified via the `title` field in frontmatter
 
 **MCP Direct Tools** (`docs_update`, `docs_create`, `docs_delete`):
+
 - Metadata must be passed as **separate parameters**, NOT through frontmatter
 - If `contentMd` is provided with frontmatter, parameters from args take priority over frontmatter values
 - Document title should **NOT** be included in `contentMd` (do not use H1 #)
@@ -133,12 +144,14 @@ If unsure — do not execute tools.
 ## Recommended workflows
 
 ### Text-only
+
 ```
 edit `*.meldoc.md`
 meldoc publish
 ```
 
 ### Structural / multi-file
+
 ```
 edit files
 meldoc scan
@@ -147,6 +160,7 @@ meldoc publish
 ```
 
 ### Missing aliases
+
 ```
 meldoc migrate
 meldoc validate
@@ -156,6 +170,7 @@ meldoc publish
 ---
 
 ## Conflicts
+
 - Never auto-resolve
 - Stop and ask
 

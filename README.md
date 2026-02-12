@@ -13,6 +13,35 @@ This is a bridge between Claude Desktop and Meldoc. After setup, Claude will be 
 
 **No additional installation required** - everything works automatically through Claude Desktop.
 
+## Installation
+
+### Via Claude Marketplace (Recommended) 🚀
+
+The easiest way to install Meldoc MCP is through the Claude Marketplace:
+
+```bash
+# Add the marketplace
+claude plugin marketplace add meldoc/mcp-stdio-proxy
+
+# Install the plugin
+claude plugin install meldoc-mcp@meldoc
+```
+
+After installation:
+
+1. Restart Claude Desktop (or your MCP client)
+2. Run `npx @meldocio/mcp-stdio-proxy@latest auth login` to authenticate
+
+### Via NPM
+
+You can also install directly via npm:
+
+```bash
+npm install -g @meldocio/mcp-stdio-proxy
+```
+
+Then add to your Claude Desktop config file (see Manual Installation below).
+
 ## Quick Setup
 
 ### Automatic Installation (Recommended) ✨
@@ -24,6 +53,7 @@ npx @meldocio/mcp-stdio-proxy@latest install
 ```
 
 This command will:
+
 - ✅ Automatically find your Claude Desktop configuration file
 - ✅ Add Meldoc MCP configuration (preserving existing MCP servers)
 - ✅ Create the config file and directory if needed
@@ -31,6 +61,7 @@ This command will:
 - ✅ Show you the next steps
 
 After running `install`, you just need to:
+
 1. Restart Claude Desktop
 2. Run `npx @meldocio/mcp-stdio-proxy@latest auth login`
 
@@ -45,6 +76,7 @@ npx @meldocio/mcp-stdio-proxy@latest uninstall
 ```
 
 This will:
+
 - ✅ Remove Meldoc MCP configuration from Claude Desktop
 - ✅ Preserve other MCP servers
 - ✅ Clean up empty `mcpServers` object if needed
