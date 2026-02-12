@@ -1,5 +1,8 @@
 # Meldoc MCP for Claude Desktop
 
+[![npm version](https://badge.fury.io/js/@meldocio%2Fmcp-stdio-proxy.svg)](https://www.npmjs.com/package/@meldocio/mcp-stdio-proxy)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 This package allows you to connect Claude Desktop to your Meldoc account, so you can use all your documentation directly in Claude.
 
 ## What is this?
@@ -298,7 +301,7 @@ npx @meldocio/mcp-stdio-proxy@latest config set-workspace workspace-name
 npx @meldocio/mcp-stdio-proxy@latest config get-workspace
 ```
 
-### Installation
+### Quick Installation Commands
 
 ```bash
 # Automatically configure Claude Desktop
