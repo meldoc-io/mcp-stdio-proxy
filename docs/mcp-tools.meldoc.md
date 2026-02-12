@@ -72,9 +72,9 @@ Retrieves information about the currently active workspace, showing which worksp
 
 Checks your current authentication status, verifying whether you're logged in and showing token expiration information. This helps you understand if you need to re-authenticate or if your session is still valid. Useful for troubleshooting authentication issues or confirming your login state.
 
-#### `auth_login`
+#### `auth_login_instructions`
 
-Starts an interactive login process to authenticate with your Meldoc account. This tool automatically opens your browser to complete the authentication flow, similar to running the CLI command directly. Once authenticated, your credentials are securely stored and automatically refreshed. Use this when you need to log in for the first time or re-authenticate after your session expires.
+Provides instructions for authenticating with your Meldoc account. Returns the command you need to run in your terminal to complete the login process. Authentication is done via CLI command that opens your browser for secure login. Once authenticated, your credentials are securely stored and automatically refreshed.
 
 ## Using with Your AI Assistant
 
