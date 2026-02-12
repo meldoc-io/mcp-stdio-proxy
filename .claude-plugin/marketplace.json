@@ -4,6 +4,9 @@
     "name": "Meldoc",
     "email": "support@meldoc.io"
   },
+  "metadata": {
+    "description": "Official Meldoc plugin marketplace for Claude Code MCP integrations"
+  },
   "plugins": [
     {
       "name": "meldoc-mcp",
@@ -13,6 +16,13 @@
       },
       "version": "1.0.20",
       "description": "Connect Claude Desktop and other MCP clients to your Meldoc documentation workspace. Read, search, create, and update your documentation directly from AI conversations.",
+      "author": {
+        "name": "Meldoc",
+        "email": "support@meldoc.io"
+      },
+      "homepage": "https://github.com/meldoc-io/mcp-stdio-proxy#readme",
+      "repository": "https://github.com/meldoc-io/mcp-stdio-proxy",
+      "license": "MIT",
       "category": "productivity",
       "keywords": [
         "mcp",
