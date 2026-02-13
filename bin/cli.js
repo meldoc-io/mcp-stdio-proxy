@@ -6,6 +6,7 @@ const { getAuthStatus } = require('../lib/auth');
 const { setWorkspaceAlias, getWorkspaceAlias } = require('../lib/config');
 const { getAccessToken } = require('../lib/auth');
 const { getApiUrl, getAppUrl } = require('../lib/constants');
+const { createInstaller } = require('../lib/install/installers');
 const axios = require('axios');
 const https = require('https');
 const chalk = require('chalk');
@@ -834,35 +835,44 @@ function installClaudeCode(scope = 'project') {
 }
 
 /**
- * Handle install command - automatically configure MCP client
+ * Handle install command - automatically configure MCP client using new installer
  */
 function handleInstall(consumer, isLocal) {
   if (isLocal) {
-    installLocal();
+    const installer = createInstaller('local');
+    const result = installer.install();
+    process.exit(result.result === 'error' ? 1 : 0);
     return;
   }
-  
+
   const consumerLower = (consumer || 'claude-desktop').toLowerCase();
-  
+  let client, scope;
+
   switch (consumerLower) {
     case 'claude-desktop':
     case 'claude':
-      installClaudeDesktop();
+      client = 'claude-desktop';
+      scope = 'project';
       break;
     case 'cursor':
-      installCursor(false); // Project-specific by default
+      client = 'cursor';
+      scope = 'project';
       break;
     case 'cursor-global':
-      installCursor(true);
+      client = 'cursor';
+      scope = 'global';
       break;
     case 'claude-code':
-      installClaudeCode('project'); // Project scope by default
+      client = 'claude-code';
+      scope = 'project';
       break;
     case 'claude-code-user':
-      installClaudeCode('user');
+      client = 'claude-code';
+      scope = 'user';
       break;
     case 'claude-code-local':
-      installClaudeCode('local');
+      client = 'claude-code';
+      scope = 'local';
       break;
     default:
       logger.error(`Unknown consumer: ${consumer}`);
@@ -878,96 +888,23 @@ function handleInstall(consumer, isLocal) {
       logger.info('Or use ' + logger.highlight('--local') + ' flag to create local mcp.json');
       console.log();
       process.exit(1);
+      return;
   }
+
+  // Use new unified installer
+  const installer = createInstaller(client, scope);
+  const result = installer.install();
+  process.exit(result.result === 'error' ? 1 : 0);
 }
 
 /**
- * Handle uninstall command - remove Meldoc MCP configuration from Claude Desktop
+ * Handle uninstall command - remove Meldoc MCP configuration using new installer
  */
 function handleUninstall() {
-  try {
-    logger.section('🗑️  Uninstalling Meldoc MCP from Claude Desktop');
-    console.log();
-    
-    const configPath = getClaudeDesktopConfigPath();
-    
-    logger.info(`Config file location: ${logger.highlight(configPath)}`);
-    console.log();
-    
-    // Check if config file exists
-    if (!fs.existsSync(configPath)) {
-      logger.warn('Claude Desktop configuration file not found');
-      logger.info('Meldoc MCP is not configured (nothing to remove)');
-      console.log();
-      process.exit(0);
-    }
-    
-    // Read existing config
-    let config = {};
-    try {
-      const content = fs.readFileSync(configPath, 'utf8');
-      config = JSON.parse(content);
-    } catch (error) {
-      logger.error(`Failed to read config file: ${error.message}`);
-      process.exit(1);
-    }
-    
-    // Check if meldoc is configured
-    if (!config.mcpServers || !config.mcpServers.meldoc) {
-      logger.warn('Meldoc MCP is not configured in Claude Desktop');
-      logger.info('Nothing to remove');
-      console.log();
-      process.exit(0);
-    }
-    
-    // Show what will be removed
-    logger.info('Current Meldoc configuration:');
-    console.log('  ' + logger.highlight(JSON.stringify(config.mcpServers.meldoc, null, 2)));
-    console.log();
-    
-    // Remove meldoc configuration
-    delete config.mcpServers.meldoc;
-    
-    // If mcpServers is now empty, remove it too
-    if (Object.keys(config.mcpServers).length === 0) {
-      delete config.mcpServers;
-    }
-    
-    // Write config file back
-    const configContent = JSON.stringify(config, null, 2);
-    fs.writeFileSync(configPath, configContent, 'utf8');
-    
-    logger.success('Meldoc MCP configuration removed successfully!');
-    console.log();
-    
-    // Count remaining MCP servers
-    if (config.mcpServers && Object.keys(config.mcpServers).length > 0) {
-      const remainingServers = Object.keys(config.mcpServers);
-      logger.info(`Remaining MCP server(s): ${remainingServers.join(', ')}`);
-      console.log();
-    } else {
-      logger.info('No other MCP servers configured');
-      console.log();
-    }
-    
-    // Next steps
-    logger.section('✅ Uninstallation Complete!');
-    console.log();
-    logger.info('Next steps:');
-    console.log('  1. Restart Claude Desktop for changes to take effect');
-    console.log('  2. To reinstall, run: ' + logger.highlight('npx @meldocio/mcp-stdio-proxy install'));
-    console.log();
-    
-    process.exit(0);
-  } catch (error) {
-    logger.error(`Uninstallation failed: ${error.message}`);
-    console.log();
-    logger.info('You can manually remove Meldoc MCP by:');
-    console.log('  1. Opening the config file: ' + logger.highlight(getClaudeDesktopConfigPath()));
-    console.log('  2. Removing the "meldoc" entry from "mcpServers" object');
-    console.log();
-    process.exit(1);
-  }
+  // Default to Claude Desktop for backward compatibility
+  const installer = createInstaller('claude-desktop');
+  const result = installer.uninstall();
+  process.exit(result.result === 'error' ? 1 : 0);
 }
 
 /**
