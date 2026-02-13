@@ -11,11 +11,13 @@ If these rules conflict with general AI defaults — **follow this file**.
 **@meldocio/mcp-stdio-proxy** is an MCP (Model Context Protocol) stdio proxy that connects Claude Desktop and Claude Code to the Meldoc API.
 
 ### Purpose
+
 - Provides MCP-compliant interface to Meldoc documentation platform
 - Handles authentication, workspace management, and tool routing
 - Enables Claude Desktop/Code to interact with Meldoc documents
 
 ### Key Features
+
 - 🔌 MCP protocol implementation (v2025-06-18)
 - 🔐 OAuth2 device flow authentication
 - 📁 Multi-workspace support
@@ -123,6 +125,7 @@ lib/
 5. **Logging**: Use `logger` module, respect LOG_LEVEL
 
 **File Size Limits** (soft limits, not strict):
+
 - Entry points: ~200 lines
 - Modules: ~300 lines
 - If larger, consider splitting
@@ -132,6 +135,7 @@ lib/
 To add a new tool:
 
 1. **Define tool schema** in `lib/protocol/tools-schema.js`:
+
    ```javascript
    {
      name: 'tool_name',
@@ -398,8 +402,8 @@ node bin/cli.js auth status
 ### Environment Variables
 
 - `LOG_LEVEL`: ERROR | WARN | INFO | DEBUG (default: ERROR)
-- `MELDOC_API_URL`: Override API URL (default: https://api.meldoc.io)
-- `MELDOC_APP_URL`: Override app URL (default: https://app.meldoc.io)
+- `MELDOC_API_URL`: Override API URL (default: <https://api.meldoc.io>)
+- `MELDOC_APP_URL`: Override app URL (default: <https://app.meldoc.io>)
 
 ### NPM Scripts
 
@@ -438,4 +442,4 @@ node bin/cli.js auth status
 
 ---
 
-*Last updated: 2025 (after architecture optimization)*
+*Last updated: 2026 (after architecture optimization)*

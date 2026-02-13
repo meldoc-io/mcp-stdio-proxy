@@ -29,7 +29,7 @@ const {
   showUnknownConfigCommandError
 } = require('../lib/cli/formatters');
 
-const logger = require('../lib/logger');
+const logger = require('../lib/core/logger');
 
 /**
  * Main CLI handler

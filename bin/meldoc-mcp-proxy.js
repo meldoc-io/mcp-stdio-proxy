@@ -14,7 +14,7 @@ const { handleLocalMethod } = require('../lib/mcp/handlers');
 const { handleToolsCall } = require('../lib/mcp/tools-call');
 const { makeBackendRequest } = require('../lib/http/client');
 const { handleBackendResponse } = require('../lib/http/error-handler');
-const { LOG_LEVELS } = require('../lib/constants');
+const { LOG_LEVELS } = require('../lib/core/constants');
 
 // Check for CLI commands first
 const args = process.argv.slice(2);
