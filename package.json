@@ -1,6 +1,6 @@
 {
   "name": "@meldocio/mcp-stdio-proxy",
-  "version": "1.0.24",
+  "version": "1.0.25",
   "description": "MCP stdio proxy for meldoc - connects Claude Desktop and Claude Code to meldoc MCP API",
   "bin": {
     "meldoc-mcp": "bin/meldoc-mcp-proxy.js"
@@ -8,6 +8,7 @@
   "files": [
     "bin/**",
     "lib/**",
+    "scripts/postinstall.js",
     ".claude-plugin/**",
     ".mcp.json",
     "README.md",
@@ -17,6 +18,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
+    "postinstall": "node scripts/postinstall.js",
     "test": "jest",
     "test:local": "MELDOC_API_URL=http://localhost:8080 MELDOC_APP_URL=http://localhost:4200 jest",
     "test:watch": "jest --watch",
