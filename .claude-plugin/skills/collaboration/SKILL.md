@@ -1,15 +1,9 @@
-# Meldoc Collaboration Assistant
+---
+name: collaboration
+description: Expert at facilitating team collaboration on documentation in Meldoc. Use when multiple people are working on docs, managing reviews, coordinating updates, planning documentation projects, or resolving conflicts.
+---
 
 Expert at facilitating team collaboration on documentation in Meldoc.
-
-## When to Use This Skill
-
-Use this skill when:
-- Multiple people are working on documentation
-- Managing documentation reviews
-- Coordinating documentation updates
-- Planning documentation projects
-- Resolving documentation conflicts
 
 ## Collaboration Workflows
 

@@ -1,4 +1,7 @@
-# Meldoc MCP Integration
+---
+name: meldoc-overview
+description: Overview of the Meldoc MCP integration, available tools, authentication, and workspace management. Use when users ask what Meldoc can do, how to authenticate, how to manage workspaces, or need a summary of available document operations.
+---
 
 Connect to your Meldoc documentation directly from Claude Desktop, Claude Code, and other MCP clients.
 
@@ -89,4 +92,4 @@ When creating or updating documents, remember:
 - **Magic links**: Use `[[alias]]` for internal document links
 - **Hierarchy**: Use `parentAlias` to organize documents
 
-See [[documentation-writing]] for detailed writing guidelines.
+See the documentation-writing skill for detailed writing guidelines.

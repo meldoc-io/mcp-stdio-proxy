@@ -1,15 +1,10 @@
-# Meldoc Advanced Workflows
+---
+name: advanced-workflows
+description: Master-level patterns for power users and complex documentation scenarios. Use for complex documentation refactoring, large-scale migrations, automated workflows, CI/CD integration, bulk operations, and custom documentation structures.
+disable-model-invocation: true
+---
 
 Master-level patterns for power users and complex documentation scenarios.
-
-## When to Use This Skill
-
-Use this skill for:
-- Complex documentation refactoring
-- Large-scale migrations
-- Automated documentation workflows
-- Integration with development pipelines
-- Custom documentation structures
 
 ## Advanced Patterns
 
