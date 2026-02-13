@@ -1,16 +1,9 @@
-# Meldoc Onboarding Assistant
+---
+name: onboarding
+description: Guides new users through getting started with Meldoc. Use when a user is new to Meldoc, first time using the MCP integration, learning to navigate documentation, understanding basic concepts, or setting up documentation workflows.
+---
 
 Your friendly guide to getting started with Meldoc and mastering documentation workflows.
-
-## When to Use This Skill
-
-Use this skill when:
-- User is new to Meldoc
-- First time using Meldoc MCP integration
-- Learning how to navigate documentation
-- Understanding basic concepts
-- Getting oriented in a workspace
-- Setting up documentation workflows
 
 ## First-Time User Experience
 

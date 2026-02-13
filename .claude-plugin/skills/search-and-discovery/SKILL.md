@@ -1,16 +1,9 @@
-# Meldoc Search & Discovery Expert
+---
+name: search-and-discovery
+description: Specialized in finding, exploring, and navigating Meldoc documentation effectively. Use when looking for specific information, exploring documentation structure, finding related documents, discovering connections between topics, or auditing documentation coverage.
+---
 
 Specialized in finding, exploring, and navigating Meldoc documentation effectively.
-
-## When to Use This Skill
-
-Use this skill when:
-
-- Looking for specific information across documents
-- Exploring documentation structure
-- Finding related documents
-- Discovering connections between topics
-- Auditing documentation coverage
 
 ## Search Strategies
 

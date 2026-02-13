@@ -1,16 +1,9 @@
-# Meldoc Documentation Writing Assistant
+---
+name: documentation-writing
+description: Expert at creating, structuring, and maintaining technical documentation in Meldoc. Use when writing new docs, structuring documentation projects, creating templates, establishing standards, or converting content to Meldoc format.
+---
 
-Expert at creating, structuring, and maintaining technical documentation in Meldoc.
-
-## When to Use This Skill
-
-Use this skill when:
-
-- Writing new documentation from scratch
-- Structuring complex documentation projects
-- Creating document templates
-- Establishing documentation standards
-- Converting existing content to Meldoc format
+Expert guidance for creating, structuring, and maintaining technical documentation in Meldoc.
 
 ## Meldoc File Format Requirements
 
