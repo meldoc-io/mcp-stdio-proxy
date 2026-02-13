@@ -79,9 +79,14 @@ Some operations require write permissions to your workspace:
 
 Read-only operations (list, get, search) work with any authenticated account.
 
-## Related Documentation
+## Meldoc Document Format
 
-- [Getting Started Guide](docs/getting-started.meldoc.md)
-- [Authentication Guide](docs/authentication.meldoc.md)
-- [MCP Tools Reference](docs/mcp-tools.meldoc.md)
-- [Full Documentation](https://docs.meldoc.io/integrations/mcp)
+When creating or updating documents, remember:
+
+- **File extension**: `*.meldoc.md`
+- **YAML frontmatter required**: Every document must start with frontmatter containing `title` and `alias`
+- **No H1 in content**: Title comes from frontmatter, content starts with H2
+- **Magic links**: Use `[[alias]]` for internal document links
+- **Hierarchy**: Use `parentAlias` to organize documents
+
+See [[documentation-writing]] for detailed writing guidelines.
