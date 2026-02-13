@@ -184,6 +184,7 @@ __tests__/
 ├── http/              # HTTP module tests (if added)
 ├── mcp/               # MCP handler tests
 ├── install/           # Installation tests
+├── scripts/           # Script tests (postinstall, etc.)
 ├── cli/               # CLI tests (if added)
 ├── auth.test.js       # Core module tests
 ├── config.test.js
@@ -250,7 +251,7 @@ describe('ModuleName', () => {
 - **Critical paths**: 100% (protocol, auth, tools routing)
 - **Modules**: 80%+ coverage
 - **Entry points**: Integration tests cover main flows
-- **Current**: 123 tests, all passing ✅
+- **Current**: 133 tests, all passing ✅
 
 ---
 
@@ -346,7 +347,15 @@ node bin/cli.js auth status
 - **`lib/mcp/handlers.js`**: Local MCP method handlers
 - **`lib/mcp/tools-call.js`**: Local tool routing
 - **`lib/http/client.js`**: Backend communication
-- **`lib/auth.js`**: OAuth2 authentication
+- **`lib/core/auth.js`**: OAuth2 authentication
+
+### Scripts
+
+- **`scripts/postinstall.js`**: Automatic installation script
+  - Runs after `npm install` from marketplace
+  - Automatically installs Claude Desktop configuration
+  - Skips in development mode (when .git exists or CI=true)
+  - Handles errors gracefully without breaking installation
 
 ---
 
@@ -412,6 +421,7 @@ node bin/cli.js auth status
 - `npm run test:local`: Run tests against localhost
 - `npm run version:patch`: Bump patch version
 - `npm run publish:patch`: Publish patch release
+- `postinstall`: Auto-runs after install to setup Claude Desktop (skipped in dev mode)
 
 ### File Locations
 
