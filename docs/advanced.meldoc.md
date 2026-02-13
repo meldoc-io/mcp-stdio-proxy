@@ -31,20 +31,25 @@ The tool uses several configuration files. Usually you don't need to edit them m
 
 **Location:** `~/.meldoc/config.json`
 
-**Purpose:** Global configuration settings.
+**Purpose:** Global configuration settings, including auto-cached workspace preference.
 
 **Contains:**
 
-- Default workspace alias
+- Default workspace alias (automatically cached when you use a workspace)
 - Other global settings
 
-**Can be edited:** Manually or via CLI commands
+**Can be edited:** Manually or via CLI commands (but usually managed automatically)
+
+**Auto-caching behavior:**
+- When you specify a workspace in any request, it's automatically cached here
+- Only caches if no `meldoc.config.yml` exists (preserves project bindings)
+- You can manually override by editing this file or using CLI
 
 **Example:**
 
 ```json
 {
-  "workspace": "my-default-workspace"
+  "workspaceAlias": "my-default-workspace"
 }
 ```
 
@@ -107,12 +112,14 @@ npm run test:local
 ## Performance Tips
 
 1. **Workspace selection:**
-   - Set default workspace to avoid selection overhead
-   - Use project-specific configs for different projects
+   - Workspace is automatically cached after first use - no manual setup needed!
+   - Use `meldoc.config.yml` for project-specific workspaces
+   - Explicit workspace in request parameters has highest priority
 
 2. **Caching:**
-   - Workspace information is cached
+   - Workspace preference is auto-cached to `~/.meldoc/config.json`
    - Tokens are cached until expiration
+   - Repo config (`meldoc.config.yml`) is read on each request but not cached globally
 
 3. **Network:**
    - Ensure stable internet connection

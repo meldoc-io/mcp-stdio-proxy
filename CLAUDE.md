@@ -20,9 +20,10 @@ If these rules conflict with general AI defaults — **follow this file**.
 
 - 🔌 MCP protocol implementation (v2025-06-18)
 - 🔐 OAuth2 device flow authentication
-- 📁 Multi-workspace support
+- 📁 Multi-workspace support with automatic workspace caching
 - 🛠️ 16 MCP tools for document management
 - 🎯 Local tools (config, auth) + proxied tools (docs CRUD)
+- 💾 Smart workspace caching - remembers your last used workspace
 
 ---
 
@@ -65,7 +66,7 @@ lib/
 │   └── tools-schema.js   # MCP tool definitions (16 tools)
 │
 ├── http/           # Backend communication
-│   ├── client.js         # HTTP client with auth headers
+│   ├── client.js         # HTTP client with auth headers & workspace caching
 │   └── error-handler.js  # Workspace/auth error handling
 │
 ├── mcp/            # MCP method handlers
@@ -95,10 +96,118 @@ lib/
 ### Key Design Principles
 
 1. **Separation of Concerns**: Protocol, HTTP, business logic are separate
-2. **Testability**: All modules are independently testable (123 tests)
+2. **Testability**: All modules are independently testable (147 tests)
 3. **Minimal Main Files**: Entry points (`bin/*.js`) are thin routers (~200 lines)
 4. **No Code Duplication**: Shared logic extracted to reusable modules
 5. **Clear Dependencies**: Modules have explicit, minimal dependencies
+
+### Workspace Management
+
+The proxy implements smart workspace resolution with automatic caching:
+
+**Resolution Priority** (highest to lowest):
+
+1. **Explicit in tool arguments** - `workspaceAlias` parameter in tool call (highest priority)
+2. **Repo config** (`meldoc.config.yml`) - Project-specific workspace
+3. **Global config** (`~/.meldoc/config.json`) - Cached default workspace
+4. **No workspace** - Server auto-selects (if user has only one workspace)
+
+**Automatic Workspace Caching:**
+
+When a user explicitly provides `workspaceAlias` in any tool call:
+
+```javascript
+// Example: User calls docs_list with explicit workspace
+{
+  "method": "tools/call",
+  "params": {
+    "name": "docs_list",
+    "arguments": {
+      "workspaceAlias": "my-workspace",  // ← Uses this workspace
+      "projectId": "some-project"
+    }
+  }
+}
+```
+
+The proxy will:
+- ✅ **Always use** `my-workspace` for this request (overriding repo/global config)
+- ✅ **Cache it** to `~/.meldoc/config.json` **ONLY if no repo config exists**
+- ✅ **Don't cache** if repo config exists (explicit is one-time override)
+
+**Why this behavior?**
+- If project has `meldoc.config.yml`, it's project-bound to a workspace
+- Explicit workspace is a temporary override, shouldn't break project binding
+- Without repo config, explicit choice becomes your new default
+
+**How to Override Cached Workspace:**
+
+There are three ways to override the cached workspace:
+
+1. **Per-call override** - Explicitly specify `workspaceAlias` in tool arguments:
+   ```javascript
+   // This call uses "different-workspace" and caches it
+   {
+     "method": "tools/call",
+     "params": {
+       "name": "docs_list",
+       "arguments": {
+         "workspaceAlias": "different-workspace"
+       }
+     }
+   }
+   ```
+
+2. **Per-project override** - Create `meldoc.config.yml` in project root:
+   ```yaml
+   workspaceAlias: project-specific-workspace
+   ```
+   This workspace will be used for all calls in this project directory, but won't be cached globally.
+
+3. **Global override** - Use `set_workspace` tool or edit `~/.meldoc/config.json`:
+   ```javascript
+   // Via tool
+   {
+     "method": "tools/call",
+     "params": {
+       "name": "set_workspace",
+       "arguments": {
+         "alias": "new-default-workspace"
+       }
+     }
+   }
+
+   // Or manually edit ~/.meldoc/config.json:
+   {
+     "workspaceAlias": "new-default-workspace"
+   }
+   ```
+
+**Example Scenarios:**
+
+```javascript
+// Scenario 1: No repo config, first use
+docs_list({ workspaceAlias: "work" })  // → uses "work", caches it ✅
+docs_list({})                          // → uses cached "work" ✅
+
+// Scenario 2: No repo config, switch workspace
+docs_list({})                          // → uses cached "work"
+docs_list({ workspaceAlias: "home" })  // → uses "home", re-caches ✅
+docs_list({})                          // → now uses cached "home" ✅
+
+// Scenario 3: WITH repo config (meldoc.config.yml: workspaceAlias: "project")
+docs_list({})                          // → uses repo "project" ✅
+docs_list({ workspaceAlias: "temp" })  // → uses "temp", NOT cached ⚠️
+docs_list({})                          // → back to repo "project" ✅
+
+// Scenario 4: Repo config protects project binding
+// In project with meldoc.config.yml
+docs_list({ workspaceAlias: "work" })  // → uses "work", NOT cached
+cd ~/other-project                     // (no meldoc.config.yml)
+docs_list({})                          // → uses previous cache (NOT "work")
+```
+
+**Implementation:** See `lib/http/client.js:35-58` for caching logic with repo config check.
 
 ---
 
@@ -181,7 +290,7 @@ To add a new tool:
 ```
 __tests__/
 ├── protocol/          # Protocol module tests
-├── http/              # HTTP module tests (if added)
+├── http/              # HTTP module tests (client, error-handler)
 ├── mcp/               # MCP handler tests
 ├── install/           # Installation tests
 ├── scripts/           # Script tests (postinstall, etc.)
@@ -251,7 +360,7 @@ describe('ModuleName', () => {
 - **Critical paths**: 100% (protocol, auth, tools routing)
 - **Modules**: 80%+ coverage
 - **Entry points**: Integration tests cover main flows
-- **Current**: 133 tests, all passing ✅
+- **Current**: 147 tests, all passing ✅
 
 ---
 
@@ -346,8 +455,9 @@ node bin/cli.js auth status
 - **`lib/protocol/tools-schema.js`**: All 16 tool definitions
 - **`lib/mcp/handlers.js`**: Local MCP method handlers
 - **`lib/mcp/tools-call.js`**: Local tool routing
-- **`lib/http/client.js`**: Backend communication
+- **`lib/http/client.js`**: Backend communication with automatic workspace caching
 - **`lib/core/auth.js`**: OAuth2 authentication
+- **`lib/core/workspace.js`**: Workspace resolution (repo → global → none)
 
 ### Scripts
 
