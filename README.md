@@ -262,10 +262,11 @@ When you ask Claude to do something with your documentation:
 ### Features
 
 - ✅ Automatic token refresh (no need to log in every time)
-- ✅ Smart workspace selection (if there's only one, it's selected automatically)
+- ✅ Smart workspace selection (automatically remembers your choice)
+- ✅ **Automatic workspace caching** - use a workspace once, it becomes your default
 - ✅ Secure data storage
 - ✅ Works with multiple workspaces
-- ✅ Support for projects and repositories
+- ✅ Support for projects and repositories with project-specific workspace binding
 
 ## Working Commands
 
@@ -326,7 +327,7 @@ npx @meldocio/mcp-stdio-proxy@latest help
 
 ## Working with Workspaces
 
-If you have multiple workspaces in Meldoc, you need to specify which one to use.
+If you have multiple workspaces in Meldoc, the system automatically manages workspace selection for you.
 
 ### How is workspace selected?
 
@@ -334,20 +335,30 @@ The system selects a workspace in this order:
 
 1. **Specified in request** - if you explicitly specified `workspaceAlias` or `workspaceId`
 2. **Project file** - if there's a `meldoc.config.yml` file in the project folder (or git repository directory)
-3. **Global setting** - if you set a default workspace
+3. **Auto-cached default** - if you previously used a workspace, it's automatically remembered
 4. **Automatically** - if you only have one workspace, it will be selected automatically
 
 **Note:** When MCP is used in a git project or directory (e.g., Claude Desktop terminal or any other LLM), the workspace is automatically taken from the `meldoc.config.yml` configuration file if it exists.
 
-### Setting default workspace
+### Automatic Workspace Memory
 
-If you have multiple workspaces, set one as default:
+**The system automatically remembers your workspace choice!** Just use a workspace once in your conversation:
+
+```text
+You: "List documents in my-workspace"
+```
+
+Now `my-workspace` is automatically your default for all future requests. No manual setup needed!
+
+### Setting default workspace manually (optional)
+
+You can also set a default workspace explicitly via CLI:
 
 ```bash
 npx @meldocio/mcp-stdio-proxy@latest config set-workspace workspace-name
 ```
 
-After this, Claude will automatically use this workspace.
+But in most cases, the automatic caching (just using the workspace once) is more convenient.
 
 ### Workspace for a specific project
 
