@@ -8,7 +8,7 @@ const {
   isTokenExpired,
   isTokenExpiredOrExpiringSoon,
   CREDENTIALS_PATH
-} = require('../lib/credentials');
+} = require('../lib/core/credentials');
 
 describe('credentials', () => {
   const testCredentials = {

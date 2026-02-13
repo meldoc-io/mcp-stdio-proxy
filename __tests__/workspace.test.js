@@ -5,8 +5,8 @@ const {
   findRepoConfig,
   readRepoConfig,
   resolveWorkspaceAlias
-} = require('../lib/workspace');
-const { writeConfig, deleteCredentials } = require('../lib/config');
+} = require('../lib/core/workspace');
+const { writeConfig, deleteCredentials } = require('../lib/core/config');
 
 // Mock js-yaml
 jest.mock('js-yaml', () => ({
@@ -45,7 +45,7 @@ describe('workspace', () => {
       fs.rmSync(testDir, { recursive: true, force: true });
     }
     // Clean config
-    const { CONFIG_PATH } = require('../lib/config');
+    const { CONFIG_PATH } = require('../lib/core/config');
     if (fs.existsSync(CONFIG_PATH)) {
       fs.unlinkSync(CONFIG_PATH);
     }

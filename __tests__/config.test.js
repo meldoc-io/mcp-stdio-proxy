@@ -7,7 +7,7 @@ const {
   getWorkspaceAlias,
   setWorkspaceAlias,
   CONFIG_PATH
-} = require('../lib/config');
+} = require('../lib/core/config');
 
 describe('config', () => {
   const testConfig = {

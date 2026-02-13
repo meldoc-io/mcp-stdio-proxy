@@ -4,8 +4,8 @@ const {
   refreshToken,
   isAuthenticated,
   getAuthStatus
-} = require('../lib/auth');
-const { writeCredentials, deleteCredentials, readCredentials } = require('../lib/credentials');
+} = require('../lib/core/auth');
+const { writeCredentials, deleteCredentials, readCredentials } = require('../lib/core/credentials');
 
 // Mock axios
 jest.mock('axios');
