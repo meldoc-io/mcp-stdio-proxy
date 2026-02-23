@@ -377,14 +377,14 @@ After setup, Claude gets access to the following capabilities:
 ### 📖 Working with documents
 
 - **`docs_list`** - Show list of all documents in the project
-- **`docs_get`** - Get content of a specific document
+- **`docs_get`** - Get content of a document (by UUID or alias)
 - **`docs_tree`** - Show document structure (tree)
 - **`docs_search`** - Find documents by text
 - **`docs_create`** - Create a new document (requires permissions)
 - **`docs_update`** - Update a document (requires permissions)
 - **`docs_delete`** - Delete a document (requires permissions)
-- **`docs_links`** - Show all links from a document
-- **`docs_backlinks`** - Show all documents that link to this one
+- **`docs_links`** - Show all links from a document (by UUID or alias)
+- **`docs_backlinks`** - Show all documents that link to this one (by UUID or alias)
 
 ### 📁 Working with projects
 

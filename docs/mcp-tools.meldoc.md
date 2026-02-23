@@ -16,6 +16,8 @@ Lists all documents available in a workspace or project. Returns a comprehensive
 
 Retrieves the complete content of a specific document, including all markdown text, frontmatter metadata, and document structure. Use this when you need to read the full content of a document, analyze its structure, or work with its content. Returns everything you need to understand what the document contains and how it's organized.
 
+You can identify the document by **UUID** or **document alias** (e.g. `readme`, `docs`). Use the `docId` parameter, or `id` as an alias for it. Optionally specify `workspaceAlias` or `workspaceId` when using multiple workspaces.
+
 #### `docs_tree`
 
 Displays the hierarchical structure of documents in a project, showing how documents are organized with parent-child relationships. This visual tree representation helps you understand the documentation architecture, navigate complex document structures, and see how different documents relate to each other. Essential for understanding the organization of large documentation sets.
@@ -40,9 +42,13 @@ Permanently removes a document from your workspace. This action cannot be undone
 
 Shows all outgoing links from a document - both internal links to other Meldoc documents and external links to websites or resources. This helps you understand what a document references and navigate to related content. Useful for exploring documentation networks and understanding how documents connect to each other.
 
+Identify the document by **UUID** or **document alias** via `docId` or `id`. Optionally specify `workspaceAlias` or `workspaceId` when using multiple workspaces.
+
 #### `docs_backlinks`
 
 Finds all documents that link to a specific document. This reverse link analysis shows you which other documents reference the current one, helping you understand document relationships and dependencies. Essential for understanding how your documentation is interconnected and which documents depend on others.
+
+Identify the document by **UUID** or **document alias** via `docId` or `id`. You can optionally pass `workspaceAlias` or `workspaceId` (same as for `docs_get` and `docs_links`) when you have multiple workspaces.
 
 ### Project Operations
 
