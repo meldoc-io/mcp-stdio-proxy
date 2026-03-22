@@ -8,13 +8,17 @@ Complete reference for all CLI commands available in Meldoc MCP.
 
 ### `auth login`
 
-Authenticate with Meldoc using device flow.
+Authenticate with Meldoc. Two flows are available:
 
 ```bash
+# OAuth 2.1 PKCE (recommended) — opens browser automatically
+npx @meldocio/mcp-stdio-proxy@latest auth login --pkce
+
+# Device flow — displays a code to enter in your browser
 npx @meldocio/mcp-stdio-proxy@latest auth login
 ```
 
-Opens a browser-based authentication flow. Credentials are saved automatically.
+Credentials and refresh tokens are saved automatically.
 
 **See also:** [[authentication]]
 

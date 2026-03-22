@@ -18,11 +18,12 @@ If these rules conflict with general AI defaults — **follow this file**.
 
 ### Key Features
 
-- 🔌 MCP protocol implementation (v2025-06-18)
-- 🔐 OAuth2 device flow authentication
+- 🔌 MCP protocol implementation (v2025-06-18), Streamable HTTP transport (spec 2025-03-26)
+- 🔐 OAuth2 device flow + OAuth 2.1 PKCE authentication (browser-based)
+- 🔄 Automatic token refresh with PKCE rotation support
 - 📁 Multi-workspace support with automatic workspace caching
-- 🛠️ 16 MCP tools for document management
-- 🎯 Local tools (config, auth) + proxied tools (docs CRUD)
+- 🛠️ MCP tools for document management (local + server-side)
+- 🎯 Local tools (auth, workspace) + proxied tools (all others forwarded to server)
 - 💾 Smart workspace caching - remembers your last used workspace
 
 ---
@@ -36,22 +37,32 @@ If these rules conflict with general AI defaults — **follow this file**.
 │  Claude Desktop/    │
 │  Claude Code        │
 └──────────┬──────────┘
-           │ stdin/stdout (MCP protocol)
+           │ stdin/stdout (MCP stdio transport)
            ↓
-┌──────────────────────────────┐
-│  meldoc-mcp-proxy (210 loc)  │
-│  - Protocol handling         │
-│  - Request routing           │
-└──────────┬───────────────────┘
+┌──────────────────────────────────┐
+│  meldoc-mcp-proxy (~255 loc)     │
+│  - initialize (local fast reply) │
+│  - ping / notifications (local)  │
+│  - local tools routing           │
+│  - tools/list (inject local)     │
+│  - everything else → proxy       │
+└──────────┬───────────────────────┘
            │
     ┌──────┴──────┐
     ↓             ↓
-┌───────────┐  ┌────────────────┐
-│ Local     │  │ Meldoc API     │
-│ Tools     │  │ (HTTP/JSON-RPC)│
-│ - config  │  │ - docs_*       │
-│ - auth    │  │ - projects_*   │
-└───────────┘  └────────────────┘
+┌───────────┐  ┌──────────────────────────────┐
+│ Local     │  │ StreamableHTTPProxy           │
+│ Tools     │  │ (lib/http/proxy.js)           │
+│ - auth_*  │  │  POST /mcp (Mcp-Session-Id)  │
+│ - *_work- │  │  handles SSE + JSON          │
+│   space   │  │  auto re-init on 404         │
+└───────────┘  └──────────────┬───────────────┘
+                              │ HTTPS (Streamable HTTP)
+                              ↓
+                    ┌─────────────────┐
+                    │  Meldoc API     │
+                    │  /mcp endpoint  │
+                    └─────────────────┘
 ```
 
 ### Module Organization
@@ -63,15 +74,16 @@ lib/
 ├── protocol/       # MCP protocol implementation
 │   ├── json-rpc.js       # JSON-RPC utilities (sendResponse, sendError)
 │   ├── error-codes.js    # Error code constants and helpers
-│   └── tools-schema.js   # MCP tool definitions (16 tools)
+│   └── tools-schema.js   # Local MCP tool definitions (auth, workspace tools)
 │
 ├── http/           # Backend communication
-│   ├── client.js         # HTTP client with auth headers & workspace caching
+│   ├── proxy.js          # StreamableHTTPProxy — Streamable HTTP transport (2025-03-26)
+│   ├── client.js         # HTTP client (used by CLI commands)
 │   └── error-handler.js  # Workspace/auth error handling
 │
 ├── mcp/            # MCP method handlers
-│   ├── handlers.js       # initialize, ping, tools/list, etc.
-│   └── tools-call.js     # Local tool routing (set_workspace, etc.)
+│   ├── handlers.js       # Minimal: ping + isNotification only
+│   └── tools-call.js     # Local tool routing (set_workspace, auth_status, etc.)
 │
 ├── install/        # Installation and configuration
 │   ├── config-paths.js   # Platform-specific config paths
@@ -80,15 +92,16 @@ lib/
 │   └── installers.js     # Unified Installer class
 │
 ├── cli/            # CLI command handling
-│   ├── commands.js       # Command implementations
+│   ├── commands.js       # Command implementations (auth login --pkce support)
 │   └── formatters.js     # Help and usage formatting
 │
 └── core/           # Core utilities
-    ├── auth.js           # Authentication (OAuth2 device flow)
+    ├── auth.js           # Token resolution + refresh (device flow + PKCE)
     ├── config.js         # Config file management
     ├── constants.js      # Constants (URLs, timeouts, versions)
     ├── credentials.js    # Credential storage
     ├── device-flow.js    # OAuth2 device flow implementation
+    ├── oauth-pkce.js     # OAuth 2.1 PKCE flow (browser-based, loopback redirect)
     ├── logger.js         # Colored logging to stderr
     └── workspace.js      # Workspace resolution
 ```
@@ -96,10 +109,11 @@ lib/
 ### Key Design Principles
 
 1. **Separation of Concerns**: Protocol, HTTP, business logic are separate
-2. **Testability**: All modules are independently testable (147 tests)
-3. **Minimal Main Files**: Entry points (`bin/*.js`) are thin routers (~200 lines)
+2. **Testability**: All modules are independently testable
+3. **Minimal Main Files**: Entry points (`bin/*.js`) are thin routers (~255 lines)
 4. **No Code Duplication**: Shared logic extracted to reusable modules
 5. **Clear Dependencies**: Modules have explicit, minimal dependencies
+6. **Thin Proxy**: Main proxy delegates almost everything to `StreamableHTTPProxy`; only `ping`, notifications, `initialize`, `tools/list` (injection), and 4 local tools are handled locally
 
 ### Workspace Management
 
@@ -452,11 +466,13 @@ node bin/cli.js auth status
 
 ### Critical Modules
 
-- **`lib/protocol/tools-schema.js`**: All 16 tool definitions
-- **`lib/mcp/handlers.js`**: Local MCP method handlers
-- **`lib/mcp/tools-call.js`**: Local tool routing
-- **`lib/http/client.js`**: Backend communication with automatic workspace caching
-- **`lib/core/auth.js`**: OAuth2 authentication
+- **`lib/http/proxy.js`**: `StreamableHTTPProxy` — Streamable HTTP transport, session management, SSE streaming
+- **`lib/protocol/tools-schema.js`**: Local tool definitions (auth + workspace tools)
+- **`lib/mcp/handlers.js`**: Minimal local handlers — `ping` + `isNotification` only
+- **`lib/mcp/tools-call.js`**: Local tool routing (4 tools: auth_status, auth_login_instructions, set_workspace, get_workspace)
+- **`lib/http/client.js`**: HTTP client used by CLI commands
+- **`lib/core/auth.js`**: Token resolution + refresh (supports device flow and PKCE)
+- **`lib/core/oauth-pkce.js`**: OAuth 2.1 PKCE flow (browser loopback, dynamic client registration)
 - **`lib/core/workspace.js`**: Workspace resolution (repo → global → none)
 
 ### Scripts
@@ -473,10 +489,11 @@ node bin/cli.js auth status
 
 ### Authentication
 
-- **OAuth2 Device Flow**: Used for user authentication
+- **OAuth2 Device Flow**: Original auth method (`auth login`)
+- **OAuth 2.1 PKCE**: Browser-based auth with loopback redirect (`auth login --pkce`); dynamic client registration, CSRF state check
+- **Token refresh**: Automatic — device flow via `/api/auth/refresh`, PKCE via refresh token rotation (`/mcp/oauth/token`)
 - **Tokens stored locally**: `~/.meldoc/credentials.json` (mode 600)
 - **Never log tokens**: Credentials excluded from logs
-- **Token refresh**: Not implemented, user must re-login
 
 ### Configuration Files
 
