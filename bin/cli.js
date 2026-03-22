@@ -67,7 +67,8 @@ async function main() {
     handleUninstall();
   } else if (command === 'auth') {
     if (subcommand === 'login') {
-      await handleAuthLogin();
+      const usePkce = args.includes('--pkce');
+      await handleAuthLogin({ pkce: usePkce });
     } else if (subcommand === 'status') {
       await handleAuthStatus();
     } else if (subcommand === 'logout') {

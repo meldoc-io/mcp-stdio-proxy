@@ -3,208 +3,252 @@
 /**
  * Meldoc MCP Stdio Proxy
  *
- * Thin proxy that handles MCP protocol and forwards requests to Meldoc API.
- * Most logic has been extracted to lib/ modules for better maintainability.
+ * Thin stdio ↔ Streamable HTTP proxy implementing MCP transport (spec 2025-03-26).
+ * Forwards all MCP protocol messages to the server-side MCP at /mcp.
+ * Handles a small set of local tools (auth_status, auth_login_instructions,
+ * set_workspace, get_workspace) directly.
  */
 
-const { validateRequest } = require('../lib/protocol/json-rpc');
-const { sendError } = require('../lib/protocol/json-rpc');
-const { JSON_RPC_ERROR_CODES } = require('../lib/protocol/error-codes');
-const { handleLocalMethod } = require('../lib/mcp/handlers');
-const { handleToolsCall } = require('../lib/mcp/tools-call');
-const { makeBackendRequest } = require('../lib/http/client');
-const { handleBackendResponse } = require('../lib/http/error-handler');
-const { LOG_LEVELS } = require('../lib/core/constants');
-
-// Check for CLI commands first
+// Check for CLI commands first (auth, config, install, etc.)
 const args = process.argv.slice(2);
 if (args.length > 0) {
-  const command = args[0];
-  if (command === 'auth' || command === 'config' || command === 'install' ||
-      command === 'uninstall' || command === 'help' || command === '--help' || command === '-h') {
+  const cmd = args[0];
+  if (cmd === 'auth' || cmd === 'config' || cmd === 'install' ||
+      cmd === 'uninstall' || cmd === 'help' || cmd === '--help' || cmd === '-h') {
     require('./cli');
     return;
   }
 }
 
-/**
- * Get log level from environment
- */
-function getLogLevel() {
+const { StreamableHTTPProxy } = require('../lib/http/proxy');
+const { handleToolsCall, isLocalTool } = require('../lib/mcp/tools-call');
+const { handlePing, isNotification } = require('../lib/mcp/handlers');
+const { getLocalToolsList } = require('../lib/protocol/tools-schema');
+const { getAccessToken } = require('../lib/core/auth');
+const { getApiUrl, LOG_LEVELS } = require('../lib/core/constants');
+
+let pkg;
+try { pkg = require('../package.json'); } catch (e) { pkg = { name: '@meldocio/mcp-stdio-proxy', version: '1.0.0' }; }
+
+// Log level
+const LOG_LEVEL = (() => {
   const level = (process.env.LOG_LEVEL || 'ERROR').toUpperCase();
   return LOG_LEVELS[level] !== undefined ? LOG_LEVELS[level] : LOG_LEVELS.ERROR;
-}
+})();
 
-const LOG_LEVEL = getLogLevel();
-
-/**
- * Log message to stderr
- */
 function log(level, message) {
   if (LOG_LEVEL >= level) {
-    const levelName = Object.keys(LOG_LEVELS)[level] || 'UNKNOWN';
-    process.stderr.write(`[${levelName}] ${message}\n`);
+    process.stderr.write(`[${Object.keys(LOG_LEVELS)[level] || 'UNKNOWN'}] ${message}\n`);
   }
 }
 
+// Create the Streamable HTTP proxy
+const proxy = new StreamableHTTPProxy(
+  getApiUrl() + '/mcp',
+  async () => {
+    const tokenInfo = await getAccessToken();
+    return tokenInfo ? tokenInfo.token : null;
+  }
+)
+
 /**
- * Process single request to backend
+ * Inject local tools into a tools/list response from the server.
+ * @param {string} responseText - Raw JSON-RPC response text from server
+ * @returns {string} Modified response with local tools prepended
  */
-async function processSingleRequest(request) {
+function injectLocalTools(responseText) {
   try {
-    const response = await makeBackendRequest(request);
-    handleBackendResponse(response, request);
-  } catch (error) {
-    // Handle request errors (network, timeout, etc.)
-    if (error.code === 'ECONNABORTED') {
-      sendError(request.id, JSON_RPC_ERROR_CODES.INTERNAL_ERROR,
-                `Request timeout after ${error.timeout || 25000}ms`, {
-                  code: 'TIMEOUT'
-                });
-    } else {
-      sendError(request.id, JSON_RPC_ERROR_CODES.INTERNAL_ERROR,
-                `Failed to communicate with backend: ${error.message}`, {
-                  code: 'BACKEND_ERROR'
-                });
+    const parsed = JSON.parse(responseText);
+    if (parsed.result && Array.isArray(parsed.result.tools)) {
+      const localTools = getLocalToolsList();
+      const serverToolNames = new Set(parsed.result.tools.map(t => t.name));
+      // Prepend local tools that aren't already in the server list
+      const toInject = localTools.filter(t => !serverToolNames.has(t.name));
+      parsed.result.tools = [...toInject, ...parsed.result.tools];
+      return JSON.stringify(parsed);
     }
+  } catch (e) {
+    // If parsing fails, return original text unchanged
   }
+  return responseText;
 }
 
 /**
- * Handle a JSON-RPC request
+ * Handle a single parsed JSON-RPC request.
+ * @param {Object} request
  */
 async function handleRequest(request) {
-  if (!request) return;
+  if (!request || typeof request !== 'object') return;
 
-  try {
-    // Handle batch requests
-    if (Array.isArray(request)) {
-      for (const req of request) {
-        if (req) {
-          try {
-            await handleSingleRequest(req);
-          } catch (error) {
-            log(LOG_LEVELS.ERROR, `Error processing batch request: ${error.message || 'Unknown error'}`);
-            if (req && req.id !== undefined && req.id !== null) {
-              sendError(req.id, JSON_RPC_ERROR_CODES.INTERNAL_ERROR,
-                        `Error processing request: ${error.message || 'Unknown error'}`, {
-                          code: 'INTERNAL_ERROR'
-                        });
-            }
-          }
-        }
-      }
-      return;
+  const { method, id } = request;
+
+  // Basic validation: method is required
+  if (!method) {
+    if (id != null) {
+      process.stdout.write(JSON.stringify({
+        jsonrpc: '2.0', id,
+        error: { code: -32600, message: 'Invalid Request: missing method' }
+      }) + '\n');
     }
-
-    // Handle single request
-    await handleSingleRequest(request);
-  } catch (error) {
-    log(LOG_LEVELS.ERROR, `Unexpected error in handleRequest: ${error.message || 'Unknown error'}`);
-    if (request && request.id !== undefined && request.id !== null) {
-      sendError(request.id, JSON_RPC_ERROR_CODES.INTERNAL_ERROR,
-                `Error processing request: ${error.message || 'Unknown error'}`, {
-                  code: 'INTERNAL_ERROR'
-                });
-    }
-  }
-}
-
-/**
- * Handle a single JSON-RPC request
- */
-async function handleSingleRequest(request) {
-  // Validate request
-  const validation = validateRequest(request);
-  if (!validation.valid) {
-    sendError(request.id, JSON_RPC_ERROR_CODES.INVALID_REQUEST, validation.error);
     return;
   }
 
-  const method = request.method;
+  // Notifications require no response
+  if (isNotification(method)) return;
 
-  // Handle local MCP methods (initialize, ping, tools/list, etc.)
-  if (handleLocalMethod(request)) {
-    return; // Handled locally
+  // ping is handled locally (fast keep-alive)
+  if (method === 'ping') {
+    handlePing(request);
+    return;
   }
 
-  // Handle tools/call (may be local or proxied)
+  // tools/call: check if it's a local tool first
   if (method === 'tools/call') {
-    const handled = await handleToolsCall(request);
-    if (handled) {
-      return; // Handled locally
+    const toolName = request.params && request.params.name;
+    if (isLocalTool(toolName)) {
+      await handleToolsCall(request);
+      return;
     }
-    // Fall through to proxy to backend
   }
 
-  // Forward all other methods to backend
-  await processSingleRequest(request);
+  // initialize: handled locally so Claude Desktop gets a fast response
+  // even if the server is temporarily unavailable.
+  // The server session is initialized lazily on the first forwarded request.
+  if (method === 'initialize') {
+    process.stdout.write(JSON.stringify({
+      jsonrpc: '2.0',
+      id,
+      result: {
+        protocolVersion: '2025-06-18',
+        capabilities: { tools: {} },
+        serverInfo: { name: pkg.name, version: pkg.version }
+      }
+    }) + '\n');
+    return;
+  }
+
+  // tools/list: forward to server and inject local tools
+  if (method === 'tools/list') {
+    // Intercept stdout temporarily to inject local tools
+    const origWrite = process.stdout.write.bind(process.stdout);
+    let captured = '';
+    let done = false;
+
+    process.stdout.write = (chunk) => {
+      if (!done) {
+        captured += chunk.toString();
+        // Check if we have a complete line
+        const lines = captured.split('\n');
+        if (lines.length > 1) {
+          done = true;
+          process.stdout.write = origWrite;
+          const modified = injectLocalTools(lines[0]);
+          origWrite(modified + '\n');
+          // Write any remaining lines
+          for (let i = 1; i < lines.length - 1; i++) {
+            if (lines[i]) origWrite(lines[i] + '\n');
+          }
+        }
+      } else {
+        origWrite(chunk);
+      }
+      return true;
+    };
+
+    try {
+      await proxy.forwardAndWrite(request);
+    } finally {
+      if (!done) {
+        process.stdout.write = origWrite;
+        if (captured.trim()) {
+          origWrite(injectLocalTools(captured.trim()) + '\n');
+        }
+      }
+    }
+    return;
+  }
+
+  // Everything else: forward to server
+  await proxy.forwardAndWrite(request);
 }
 
 /**
- * Handle a single line from stdin
+ * Handle a raw JSON line from stdin.
  */
-function handleLine(line) {
-  if (!line || !line.trim()) return;
+async function handleLine(line) {
+  if (!line.trim()) return;
+
+  let request;
+  try {
+    request = JSON.parse(line);
+  } catch (e) {
+    log(LOG_LEVELS.ERROR, 'Parse error: ' + e.message);
+    return;
+  }
 
   try {
-    const request = JSON.parse(line);
-    handleRequest(request);
-  } catch (parseError) {
-    log(LOG_LEVELS.ERROR, `Parse error: ${parseError.message}`);
+    if (Array.isArray(request)) {
+      // Batch requests
+      for (const req of request) {
+        try {
+          await handleRequest(req);
+        } catch (err) {
+          log(LOG_LEVELS.ERROR, 'Batch request error: ' + err.message);
+          if (req && req.id != null) {
+            process.stdout.write(JSON.stringify({
+              jsonrpc: '2.0', id: req.id,
+              error: { code: -32603, message: err.message }
+            }) + '\n');
+          }
+        }
+      }
+    } else {
+      await handleRequest(request);
+    }
+  } catch (err) {
+    log(LOG_LEVELS.ERROR, 'Unexpected error: ' + err.message);
+    if (request && request.id != null) {
+      process.stdout.write(JSON.stringify({
+        jsonrpc: '2.0', id: request.id,
+        error: { code: -32603, message: err.message }
+      }) + '\n');
+    }
   }
 }
 
-/**
- * Setup stdin/stdout handling
- */
+// Stdin/stdout setup
 let buffer = '';
 
 process.stdin.setEncoding('utf8');
+
 process.stdin.on('data', (chunk) => {
   buffer += chunk;
   const lines = buffer.split('\n');
   buffer = lines.pop() || '';
-
   for (const line of lines) {
-    const trimmed = line.trim();
-    if (trimmed) {
-      handleLine(trimmed);
-    }
+    if (line.trim()) handleLine(line.trim());
   }
 });
 
 process.stdin.on('end', () => {
-  if (buffer.trim()) {
-    handleLine(buffer.trim());
-  }
+  if (buffer.trim()) handleLine(buffer.trim());
 });
 
-process.stdin.on('error', (error) => {
-  // Silently handle stdin errors - normal when Claude Desktop closes connection
+process.stdin.on('error', () => {});
+
+process.stdout.on('error', (err) => {
+  if (err.code === 'EPIPE') process.exit(0);
 });
 
-process.stdout.on('error', (error) => {
-  // Exit gracefully on EPIPE (stdout closed)
-  if (error.code === 'EPIPE') {
-    process.exit(0);
-  }
-});
-
-/**
- * Graceful shutdown handling
- */
-let isShuttingDown = false;
-
-function gracefulShutdown(signal) {
-  if (isShuttingDown) return;
-  isShuttingDown = true;
-  log(LOG_LEVELS.INFO, `Received ${signal}, shutting down gracefully...`);
+// Graceful shutdown
+let shuttingDown = false;
+function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  log(LOG_LEVELS.INFO, `Received ${signal}, shutting down`);
   setTimeout(() => process.exit(0), 100);
 }
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
 
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-
-// Start message
 log(LOG_LEVELS.DEBUG, 'Meldoc MCP Stdio Proxy started');
