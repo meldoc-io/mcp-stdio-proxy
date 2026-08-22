@@ -383,8 +383,7 @@ After setup, Claude gets access to the following capabilities:
 - **`docs_create`** - Create a new document (requires permissions)
 - **`docs_update`** - Update a document (requires permissions)
 - **`docs_delete`** - Delete a document (requires permissions)
-- **`docs_links`** - Show all links from a document (by UUID or alias)
-- **`docs_backlinks`** - Show all documents that link to this one (by UUID or alias)
+- **`docs_related`** - Show a document's relationships: outgoing links, backlinks, tree neighbors, and link suggestions (views: outgoing / incoming / suggest-links)
 
 ### 📁 Working with projects
 
