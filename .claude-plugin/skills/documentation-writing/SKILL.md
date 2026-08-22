@@ -347,8 +347,8 @@ Use task lists for checklists:
 Check who references your document:
 
 ```javascript
-// Use docs_backlinks to find
-docs_backlinks({ docId: "your-doc-id" })
+// Use docs_related with view "incoming" to find backlinks
+docs_related({ docId: "your-doc-id", view: "incoming" })
 ```
 
 ### Document Trees
@@ -376,7 +376,7 @@ parentAlias: parent-doc
 1. **Start with outline** - Use `docs_create` with basic structure first
 2. **Iterate sections** - Update one section at a time
 3. **Check existing docs** - Use `docs_search` to avoid duplication
-4. **Link liberally** - Use `docs_links` to see connection opportunities
+4. **Link liberally** - Use `docs_related` with `view: "suggest-links"` to find unlinked candidates worth a `[[link]]`
 5. **Review tree** - Use `docs_tree` to ensure logical hierarchy
 6. **Always include frontmatter** - Never create documents without YAML frontmatter
 7. **Use magic links** - Prefer `[[alias]]` over relative paths when possible
@@ -447,7 +447,8 @@ docs_get({ docId: "..." })
 // 3. Consolidate or split as needed
 docs_update({ docId: "...", contentMd: "..." })
 
-// 4. Update links using docs_links
+// 4. Check affected links: docs_related({ docId: "...", view: "incoming" })
+//    shows which documents link here and need updating
 ```
 
 ### Migration from Other Platforms

@@ -61,26 +61,34 @@ docs_get({ docId: "..." })
 
 ### Link-Based Discovery
 
-**Use `docs_links` to:**
+**Use `docs_related` with `view: "outgoing"` to:**
 
 - See what a document references
 - Follow documentation trails
 - Understand dependencies
 
-**Use `docs_backlinks` to:**
+**Use `docs_related` with `view: "incoming"` to:**
 
-- Find what references a document
+- Find what references a document (backlinks)
 - See document importance (more backlinks = more central)
 - Discover unexpected connections
+
+**Use `docs_related` without `view` to:**
+
+- Get the full neighborhood in one call: links, backlinks, hierarchy, semantic neighbors
+- Get a ranked `next[]` list of where to read next
 
 **Example:**
 
 ```javascript
-// Find what links TO a key document
-docs_backlinks({ docId: "getting-started" })
+// Find what links TO a key document (backlinks)
+docs_related({ docId: "getting-started", view: "incoming" })
 
 // Find what a document links TO
-docs_links({ docId: "api-reference" })
+docs_related({ docId: "api-reference", view: "outgoing" })
+
+// Full neighborhood + ranked next[] reading path
+docs_related({ docId: "getting-started" })
 ```
 
 ## Discovery Patterns
@@ -105,8 +113,8 @@ When user asks "tell me about X":
 3. **Find related:**
 
    ```javascript
-   docs_links({ docId: "result-1" })
-   docs_backlinks({ docId: "result-1" })
+   // One call returns links, backlinks, and semantic neighbors
+   docs_related({ docId: "result-1" })
    ```
 
 4. **Synthesize and present** with links to all relevant docs using magic links: `[[doc-alias]]`
@@ -217,9 +225,8 @@ Consider user's current context:
 // If user is viewing a specific document
 docs_get({ docId: "current-doc" })
 
-// Find related content
-docs_links({ docId: "current-doc" })
-docs_backlinks({ docId: "current-doc" })
+// Find related content (links, backlinks, semantic neighbors in one call)
+docs_related({ docId: "current-doc" })
 
 // Search within that domain
 docs_search({ 

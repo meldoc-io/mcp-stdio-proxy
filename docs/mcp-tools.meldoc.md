@@ -38,17 +38,13 @@ Updates an existing document's content, title, or metadata. You can modify the m
 
 Permanently removes a document from your workspace. This action cannot be undone, so use it carefully. The document and all its content will be deleted, though links to it from other documents may remain. Requires write permissions to your workspace.
 
-#### `docs_links`
+#### `docs_related`
 
-Shows all outgoing links from a document - both internal links to other Meldoc documents and external links to websites or resources. This helps you understand what a document references and navigate to related content. Useful for exploring documentation networks and understanding how documents connect to each other.
+Returns a document's relationships in the knowledge graph: outgoing `[[links]]`, backlinks, parent and children in the tree, semantic neighbors, and a ranked `next[]` drill path. One call replaces what used to take separate links / backlinks / tree lookups.
 
-Identify the document by **UUID** or **document alias** via `docId` or `id`. Optionally specify `workspaceAlias` or `workspaceId` when using multiple workspaces.
+Use the `view` parameter to match your task: omit it (default) for the full neighborhood plus a ranked `next[]` reading path; `view: "outgoing"` for only the documents this one links to; `view: "incoming"` for only the documents that link to this one (backlinks); `view: "suggest-links"` for semantic neighbors that are not yet linked — useful when authoring a document and looking for `[[link]]` candidates to insert.
 
-#### `docs_backlinks`
-
-Finds all documents that link to a specific document. This reverse link analysis shows you which other documents reference the current one, helping you understand document relationships and dependencies. Essential for understanding how your documentation is interconnected and which documents depend on others.
-
-Identify the document by **UUID** or **document alias** via `docId` or `id`. You can optionally pass `workspaceAlias` or `workspaceId` (same as for `docs_get` and `docs_links`) when you have multiple workspaces.
+Identify the document by **UUID** or **document alias** via `docId` or `id`. You can optionally pass `workspaceAlias` or `workspaceId` (same as for `docs_get`) when you have multiple workspaces.
 
 ### Project Operations
 
