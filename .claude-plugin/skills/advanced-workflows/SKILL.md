@@ -127,14 +127,14 @@ async function validateDocumentation(projectId) {
     }
     
     // Check links (should use [[alias]] format)
-    const links = await docs_links({ docId: doc.id });
+    const { links = [] } = await docs_related({ docId: doc.id, view: "outgoing" });
     const contentLinks = content.contentMd.match(/\[\[([^\]]+)\]\]/g);
     if (links.length > 0 && !contentLinks) {
       issues.push(`${doc.title}: Links should use [[alias]] format`);
     }
     
     // Check backlinks
-    const backlinks = await docs_backlinks({ docId: doc.id });
+    const { backlinks = [] } = await docs_related({ docId: doc.id, view: "incoming" });
     if (backlinks.length === 0 && !doc.parentAlias) {
       issues.push(`${doc.title}: Orphaned document`);
     }
@@ -153,23 +153,16 @@ async function analyzeConnections(projectId) {
   const docs = await docs_list({ projectId });
   const graph = {};
   
-  // Build connection graph
+  // Build connection graph — one docs_related call per doc
+  // returns both outgoing links and backlinks
   for (const doc of docs) {
-    const links = await docs_links({ docId: doc.id });
+    const { links = [], backlinks = [] } = await docs_related({ docId: doc.id });
     graph[doc.id] = {
       title: doc.title,
       alias: doc.alias,
       outgoing: links.length,
-      incoming: 0
+      incoming: backlinks.length
     };
-  }
-  
-  // Count incoming links
-  for (const doc of docs) {
-    const backlinks = await docs_backlinks({ docId: doc.id });
-    if (graph[doc.id]) {
-      graph[doc.id].incoming = backlinks.length;
-    }
   }
   
   // Identify hubs (many links)

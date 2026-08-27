@@ -20,8 +20,7 @@ Meldoc MCP provides seamless access to your Meldoc documentation workspace throu
 - **`docs_create`** - Create a new document (requires write permissions)
 - **`docs_update`** - Update an existing document's content or metadata (requires write permissions)
 - **`docs_delete`** - Delete a document (requires write permissions)
-- **`docs_links`** - Show all outgoing links from a document
-- **`docs_backlinks`** - Find all documents that link to a specific document
+- **`docs_related`** - Get a document's relationships: outgoing links, backlinks, hierarchy, and semantic neighbors. Use `view: "outgoing"` for links from the document, `view: "incoming"` for backlinks, `view: "suggest-links"` for unlinked semantic candidates
 
 ### Project Operations
 
