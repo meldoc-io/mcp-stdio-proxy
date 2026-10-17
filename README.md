@@ -18,6 +18,8 @@ claude plugin install meldoc-mcp@meldoc-mcp
 
 Then run `/mcp` in Claude Code, pick the Meldoc server and choose **Authenticate**.
 
+The plugin also brings two skills, `meldoc-format` (frontmatter, ordering, links) and `meldoc-writing` (how to write the text). They are the same files published at [meldoc.io/skills](https://meldoc.io/skills/meldoc-format/SKILL.md).
+
 ## Setup
 
 Requires Node.js 18 or newer.

@@ -345,6 +345,16 @@ The Claude Code plugin is versioned on its own, in `.claude-plugin/plugin.json` 
 `.claude-plugin/marketplace.json`: bump both when the plugin changes, not when the npm package does.
 The plugin connects to the hosted server and does not use this package.
 
+`skills/meldoc-format` and `skills/meldoc-writing` are copies. The source is
+`packages/meldoc-skills` in `meldoc-io/meldoc-monorepo`, published at `https://meldoc.io/skills/<name>/SKILL.md`;
+edit them there, never here. To refresh, then bump the plugin version:
+
+```bash
+for s in meldoc-format meldoc-writing; do curl -fsSL "https://meldoc.io/skills/$s/SKILL.md" -o "skills/$s/SKILL.md"; done
+```
+
+Skills belong in `skills/` at the plugin root: Claude Code does not load anything from `.claude-plugin/` but the manifests.
+
 ---
 
 ## Important Files
