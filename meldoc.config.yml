@@ -1,4 +1,0 @@
-nameTemplate: '{alias}'
-workspaceAlias: meldoc
-projectAlias: meldoc-mcp
-prune: true

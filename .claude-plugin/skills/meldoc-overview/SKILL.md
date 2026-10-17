@@ -3,92 +3,40 @@ name: meldoc-overview
 description: Overview of the Meldoc MCP integration, available tools, authentication, and workspace management. Use when users ask what Meldoc can do, how to authenticate, how to manage workspaces, or need a summary of available document operations.
 ---
 
-Connect to your Meldoc documentation directly from Claude Desktop, Claude Code, and other MCP clients.
-
-## Overview
-
-Meldoc MCP provides seamless access to your Meldoc documentation workspace through the Model Context Protocol. Once configured, you can interact with your documentation naturally through AI conversations.
+This plugin connects Claude Code to the hosted Meldoc MCP server at `https://api.meldoc.io/mcp`.
 
 ## Available Tools
 
-### Document Operations
+The server describes every tool itself; this is the map.
 
-- **`docs_list`** - List all documents in a workspace or project
-- **`docs_get`** - Get the complete content of a specific document
-- **`docs_tree`** - Display the hierarchical structure of documents in a project
-- **`docs_search`** - Search through all documents using full-text search
-- **`docs_create`** - Create a new document (requires write permissions)
-- **`docs_update`** - Update an existing document's content or metadata (requires write permissions)
-- **`docs_delete`** - Delete a document (requires write permissions)
-- **`docs_related`** - Get a document's relationships: outgoing links, backlinks, hierarchy, and semantic neighbors. Use `view: "outgoing"` for links from the document, `view: "incoming"` for backlinks, `view: "suggest-links"` for unlinked semantic candidates
+- **Documents** — `docs_list`, `docs_get`, `docs_tree`, `docs_search`, `docs_create`, `docs_update`, `docs_delete`, `docs_related`, `docs_graph`, `docs_history`, `docs_audit`
+- **Projects** — `projects_list`, `projects_create`, `project_contributors_list`, `project_contributors_add`
+- **Comments** — `comments_list`, `comments_create`, `comments_reply`, `comments_resolve`, `comments_reopen`, `comments_update`
+- **Custom fields and document types** — `fields_list`, `fields_define`, `fields_update`, `fields_delete`, `doc_fields_set`, `templates_list`, `templates_get`
+- **Glossary** — `glossary_list`, `glossary_get`, `glossary_add`, `glossary_update`, `glossary_delete`
+- **Assets** — `assets_list`, `asset_get`, `asset_attach`
+- **Account** — `server_info`, `list_workspaces`, `get_workspace`, `auth_login_instructions`
 
-### Project Operations
+Read only what you need: `docs_get` takes `headings_only: true` for the outline, `sections: [...]` for chosen H2 sections, and `max_chars` to cap the text. Edit only what changes: `docs_update` takes `sections[]` (by heading path) and `replacements[]` instead of the whole `contentMd`.
 
-- **`projects_list`** - List all projects available in your workspace
-
-### Management Operations
-
-- **`server_info`** - Get information about your account and access permissions
-- **`list_workspaces`** - Show all workspaces you have access to
-- **`set_workspace`** - Set the default workspace for operations
-- **`get_workspace`** - Get information about the currently active workspace
-- **`auth_status`** - Check your current authentication status
-
-## Usage Examples
-
-Simply ask Claude naturally! For example:
-
-- "Show me all documents in the API project"
-- "Find information about authentication"
-- "Search for documents about error handling"
-- "Create a new document about our deployment process"
-- "Which documents link to the database schema?"
-- "Show me the document tree for the frontend project"
-- "Update the getting started guide with new information"
-
-Your AI assistant will automatically:
-
-- Select the appropriate tool
-- Handle authentication
-- Format the results nicely
-- Provide context and explanations
+Full reference: https://public.meldoc.io/meldoc/documentation/mcp-tools
 
 ## Authentication
 
-Before using Meldoc MCP, you need to authenticate:
-
-```bash
-npx @meldocio/mcp-stdio-proxy@latest auth login
-```
-
-This will open a browser flow for secure authentication. Your credentials are stored locally and automatically refreshed.
+Run `/mcp` in Claude Code, pick the Meldoc server and choose **Authenticate**. A browser window opens for sign-in; Claude Code keeps the session and renews it.
 
 ## Workspace Management
 
-If you have multiple workspaces, you can:
-
-1. List all workspaces: `npx @meldocio/mcp-stdio-proxy@latest config list-workspaces`
-2. Set default workspace: `npx @meldocio/mcp-stdio-proxy@latest config set-workspace <name>`
-3. Or specify workspace in requests directly
+If your account belongs to several workspaces, `list_workspaces` shows them and `get_workspace` shows which one is in use. No tool sets a default: pass `workspaceAlias` on the call itself. Without it the server uses the workspace last named explicitly, or answers `WORKSPACE_REQUIRED`.
 
 ## Permissions
 
-Some operations require write permissions to your workspace:
-
-- Creating documents
-- Updating documents
-- Deleting documents
-
-Read-only operations (list, get, search) work with any authenticated account.
+Reading works on every plan. Creating, updating and deleting documents need the Pro plan and a role that allows it; `server_info` reports what the current session may do.
 
 ## Meldoc Document Format
 
-When creating or updating documents, remember:
+- Over MCP, pass a `title` and a Markdown body. A leading `# H1` in the body becomes the title, so don't send one when round-tripping.
+- Link documents with `[[alias]]`.
+- Files synced by the `meldoc` CLI are `*.meldoc.md` with YAML frontmatter (`title`, `alias`, `parentAlias`).
 
-- **File extension**: `*.meldoc.md`
-- **YAML frontmatter required**: Every document must start with frontmatter containing `title` and `alias`
-- **No H1 in content**: Title comes from frontmatter, content starts with H2
-- **Magic links**: Use `[[alias]]` for internal document links
-- **Hierarchy**: Use `parentAlias` to organize documents
-
-See the documentation-writing skill for detailed writing guidelines.
+See the documentation-writing skill for writing guidelines.

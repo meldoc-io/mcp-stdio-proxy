@@ -376,18 +376,17 @@ Work across workspaces:
 
 ```javascript
 async function syncAcrossWorkspaces(sourceWs, targetWs, docId) {
-  // 1. Get document from source
-  set_workspace({ workspace: sourceWs });
-  const sourceDoc = await docs_get({ docId });
+  // 1. Get document from source (the workspace travels on each call)
+  const sourceDoc = await docs_get({ docId, workspaceAlias: sourceWs });
   
   // 2. Extract frontmatter and content
   const frontmatterMatch = sourceDoc.contentMd.match(/^---\n([\s\S]*?)\n---/);
   const contentBody = sourceDoc.contentMd.replace(/^---[\s\S]*?---\s*\n/, '');
   
   // 3. Create in target with new alias
-  set_workspace({ workspace: targetWs });
   const newAlias = `${sourceDoc.alias}-imported`;
   const targetDoc = await docs_create({
+    workspaceAlias: targetWs,
     title: `[From ${sourceWs}] ${sourceDoc.title}`,
     alias: newAlias,
     contentMd: `---
