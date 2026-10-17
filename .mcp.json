@@ -1,6 +1,8 @@
 {
-  "meldoc-mcp": {
-    "command": "npx",
-    "args": ["-y", "@meldocio/mcp-stdio-proxy@latest"]
+  "mcpServers": {
+    "meldoc-mcp": {
+      "type": "http",
+      "url": "https://api.meldoc.io/mcp"
+    }
   }
 }

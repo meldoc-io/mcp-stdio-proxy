@@ -1,130 +1,30 @@
-# Meldoc MCP for Claude Desktop & Claude Code
+# Meldoc MCP stdio proxy
 
 [![npm version](https://badge.fury.io/js/@meldocio%2Fmcp-stdio-proxy.svg)](https://www.npmjs.com/package/@meldocio/mcp-stdio-proxy)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-This package allows you to connect Claude Desktop and Claude Code to your Meldoc account, so you can use all your documentation directly in Claude.
+**Most MCP clients don't need this package.** Meldoc runs a hosted MCP server at `https://api.meldoc.io/mcp` (Streamable HTTP, OAuth sign-in or a Bearer token). Claude.ai, Claude Desktop, Claude Code, Cursor, VS Code and Windsurf connect to it directly — see [Getting started with MCP](https://public.meldoc.io/meldoc/documentation/mcp-getting-started).
 
-## 🚀 Quick Start - Install from Claude Marketplace
+This package is a stdio bridge to that server, for a client that can only start a local process and cannot use [`mcp-remote`](https://www.npmjs.com/package/mcp-remote). It forwards every request to the hosted server, so the tools are the same — see the [MCP tools reference](https://public.meldoc.io/meldoc/documentation/mcp-tools).
 
-The easiest way to install Meldoc MCP is through the Claude Marketplace:
+## Claude Code plugin
+
+This repository is also a Claude Code plugin marketplace. The plugin connects Claude Code to the hosted server directly, without this package:
 
 ```bash
-# Add the marketplace
 claude plugin marketplace add meldoc-io/mcp-stdio-proxy
-
-# Install the plugin
 claude plugin install meldoc-mcp@meldoc-mcp
 ```
 
-After installation:
+Then run `/mcp` in Claude Code, pick the Meldoc server and choose **Authenticate**.
 
-1. Restart Claude Desktop or Claude Code
-2. Run `npx @meldocio/mcp-stdio-proxy@latest auth login` to authenticate
+The plugin also brings two skills, `meldoc-format` (frontmatter, ordering, links) and `meldoc-writing` (how to write the text). They are the same files published at [meldoc.io/skills](https://meldoc.io/skills/meldoc-format/SKILL.md).
 
-Done! 🎉 Now you can ask Claude to work with your Meldoc documentation.
+## Setup
 
-## What is this?
+Requires Node.js 18 or newer.
 
-This is a bridge between Claude (Desktop & Code) and Meldoc. After setup, Claude will be able to:
-
-- 📖 Read your documentation from Meldoc
-- 🔍 Search through documents
-- ✏️ Create and update documents (if you have permissions)
-- 📁 Work with projects and workspaces
-
-**No additional installation required** - everything works automatically through Claude Desktop and Claude Code.
-
-## Installation
-
-### Via Claude Marketplace (Recommended) 🚀
-
-See [Quick Start](#-quick-start---install-from-claude-marketplace) section above for the easiest installation method.
-
-### Via NPM
-
-You can also install directly via npm:
-
-```bash
-npm install -g @meldocio/mcp-stdio-proxy
-```
-
-Then add to your Claude Desktop config file (see Manual Installation below).
-
-## Quick Setup
-
-### Automatic Installation (Recommended) ✨
-
-The easiest way to set up Meldoc MCP is using the automatic installer:
-
-```bash
-npx @meldocio/mcp-stdio-proxy@latest install
-```
-
-This command will:
-
-- ✅ Automatically find your Claude Desktop configuration file
-- ✅ Add Meldoc MCP configuration (preserving existing MCP servers)
-- ✅ Create the config file and directory if needed
-- ✅ Check if already installed (won't duplicate if already configured)
-- ✅ Show you the next steps
-
-After running `install`, you just need to:
-
-1. Restart Claude Desktop
-2. Run `npx @meldocio/mcp-stdio-proxy@latest auth login`
-
-Done! 🎉
-
-### Uninstalling
-
-To remove Meldoc MCP from Claude Desktop:
-
-```bash
-npx @meldocio/mcp-stdio-proxy@latest uninstall
-```
-
-This will:
-
-- ✅ Remove Meldoc MCP configuration from Claude Desktop
-- ✅ Preserve other MCP servers
-- ✅ Clean up empty `mcpServers` object if needed
-
-After running `uninstall`, restart Claude Desktop for changes to take effect.
-
----
-
-### Manual Installation
-
-If you prefer to configure manually, follow these steps:
-
-### Step 1: Find Claude Desktop configuration file
-
-Open the configuration file depending on your operating system:
-
-**macOS:**
-
-```text
-~/Library/Application Support/Claude/claude_desktop_config.json
-```
-
-**Windows:**
-
-```text
-%APPDATA%\Claude\claude_desktop_config.json
-```
-
-**Linux:**
-
-```text
-~/.config/Claude/claude_desktop_config.json
-```
-
-> 💡 **Tip:** If the file doesn't exist, create it. Make sure the folder exists.
-
-### Step 2: Add Meldoc configuration
-
-Open the file in any text editor and add the following:
+Add the proxy to your client's MCP configuration:
 
 ```json
 {
@@ -137,434 +37,53 @@ Open the file in any text editor and add the following:
 }
 ```
 
-> ⚠️ **Important:** If the file already has other MCP servers, simply add `"meldoc"` to the existing `mcpServers` object.
+Or let the installer write it: `npx @meldocio/mcp-stdio-proxy@latest install [claude-desktop|cursor|cursor-global|claude-code]` (`uninstall` removes it from Claude Desktop).
 
-### Step 3: Restart Claude Desktop
-
-Completely close and reopen Claude Desktop for the changes to take effect.
-
-### Step 4: Log in to your Meldoc account
-
-Open a terminal and run:
+Then sign in once:
 
 ```bash
 npx @meldocio/mcp-stdio-proxy@latest auth login
 ```
 
-Follow the on-screen instructions - you'll need to open a link in your browser and enter a code.
+`auth login` shows a device code and opens the browser; `auth login --pkce` uses OAuth with PKCE instead. The session is stored in `~/.meldoc/credentials.json` and refreshed automatically. `auth status` and `auth logout` do what they say.
 
-Done! Now Claude can work with your Meldoc documentation.
+### Using a token instead
 
-## Authentication (Logging in)
-
-For Claude to work with your documentation, you need to log in to your Meldoc account. There are several ways to do this:
-
-### Method 1: Interactive login (recommended) ✨
-
-The easiest way is to use the login command:
-
-```bash
-npx @meldocio/mcp-stdio-proxy@latest auth login
-```
-
-**What will happen:**
-
-1. A link and code will appear in the terminal
-2. Open the link in your browser
-3. Enter the code on the Meldoc website
-4. Done! Your data will be saved automatically
-
-**Advantages:**
-
-- ✅ No need to copy tokens manually
-- ✅ Tokens are updated automatically
-- ✅ Secure data storage
-
-### Method 2: Using a token (for integrations)
-
-If you're using a token for integration (e.g., for CI/CD), you can specify it directly.
-
-**In Claude Desktop configuration:**
+Create an integration token in Meldoc (**Integration Tokens → Create token**) and pass it in the environment:
 
 ```json
-{
-  "mcpServers": {
-    "meldoc": {
-      "command": "npx",
-      "args": ["-y", "@meldocio/mcp-stdio-proxy@latest"],
-      "env": {
-        "MELDOC_ACCESS_TOKEN": "your_token_here"
-      }
-    }
-  }
-}
+"env": { "MELDOC_ACCESS_TOKEN": "mdc_your_token" }
 ```
 
-**Or via environment variable:**
+The proxy looks for a token in this order: `MELDOC_ACCESS_TOKEN`, the saved session, `MELDOC_MCP_TOKEN`.
 
-```bash
-export MELDOC_ACCESS_TOKEN=your_token_here
-```
+## Workspaces
 
-### Check login status
+If your account belongs to several workspaces, the proxy pins one on every request, taken from:
 
-To check if you're logged in:
+1. `workspaceAlias` in a `meldoc.config.yml` in the current directory or a parent, then
+2. the default set with `npx @meldocio/mcp-stdio-proxy@latest config set-workspace <alias>` (stored in `~/.meldoc/config.json`).
 
-```bash
-npx @meldocio/mcp-stdio-proxy@latest auth status
-```
+A `workspaceAlias` argument on a single tool call still overrides the pin. `config list-workspaces` lists what you can reach.
 
-### Logging out
+## Local tools
 
-To log out and remove saved data:
-
-```bash
-npx @meldocio/mcp-stdio-proxy@latest auth logout
-```
-
-### Automatic token refresh
-
-If you used `auth login`, tokens will be automatically refreshed 5 minutes before expiration. You don't need to do anything - everything works automatically!
-
-## Frequently Asked Questions
-
-### Do I need to install anything additional?
-
-No! Everything works through `npx`, which automatically downloads the necessary files on first use.
-
-### Is this secure?
-
-Yes! Your tokens are stored locally on your computer with proper access permissions. Tokens are automatically refreshed so they don't expire.
-
-### Can I use multiple accounts?
-
-Yes, but you need to switch between them using the `auth logout` and `auth login` commands.
-
-### What to do if something doesn't work?
-
-1. Check that you're logged in: `npx @meldocio/mcp-stdio-proxy@latest auth status`
-2. Check workspace: `npx @meldocio/mcp-stdio-proxy@latest config get-workspace`
-3. See the "Troubleshooting" section above
-4. If nothing helps, create an issue on GitHub
-
-## How does it work?
-
-When you ask Claude to do something with your documentation:
-
-1. Claude sends a request through MCP (Model Context Protocol)
-2. Our proxy receives the request and adds your authorization token
-3. The request is sent to the Meldoc server
-4. The response is returned back to Claude
-5. Claude shows you the result
-
-**Everything happens automatically** - you don't need to do anything manually!
-
-### Features
-
-- ✅ Automatic token refresh (no need to log in every time)
-- ✅ Smart workspace selection (automatically remembers your choice)
-- ✅ **Automatic workspace caching** - use a workspace once, it becomes your default
-- ✅ Secure data storage
-- ✅ Works with multiple workspaces
-- ✅ Support for projects and repositories with project-specific workspace binding
-
-## Working Commands
-
-### Installation commands
-
-```bash
-# Automatically configure Claude Desktop for Meldoc MCP
-npx @meldocio/mcp-stdio-proxy@latest install
-
-# Remove Meldoc MCP configuration from Claude Desktop
-npx @meldocio/mcp-stdio-proxy@latest uninstall
-```
-
-### Authentication commands
-
-```bash
-# Log in to account (browser will open)
-npx @meldocio/mcp-stdio-proxy@latest auth login
-
-# Check if you're logged in
-npx @meldocio/mcp-stdio-proxy@latest auth status
-
-# Log out of account
-npx @meldocio/mcp-stdio-proxy@latest auth logout
-```
-
-### Workspace management commands
-
-If you have multiple workspaces, you can manage them:
-
-```bash
-# View all available workspaces
-npx @meldocio/mcp-stdio-proxy@latest config list-workspaces
-
-# Set default workspace
-npx @meldocio/mcp-stdio-proxy@latest config set-workspace workspace-name
-
-# View current workspace
-npx @meldocio/mcp-stdio-proxy@latest config get-workspace
-```
-
-### Quick Installation Commands
-
-```bash
-# Automatically configure Claude Desktop
-npx @meldocio/mcp-stdio-proxy@latest install
-
-# Remove configuration
-npx @meldocio/mcp-stdio-proxy@latest uninstall
-```
-
-### Help
-
-```bash
-# Show all available commands
-npx @meldocio/mcp-stdio-proxy@latest help
-```
-
-## Working with Workspaces
-
-If you have multiple workspaces in Meldoc, the system automatically manages workspace selection for you.
-
-### How is workspace selected?
-
-The system selects a workspace in this order:
-
-1. **Specified in request** - if you explicitly specified `workspaceAlias` or `workspaceId`
-2. **Project file** - if there's a `meldoc.config.yml` file in the project folder (or git repository directory)
-3. **Auto-cached default** - if you previously used a workspace, it's automatically remembered
-4. **Automatically** - if you only have one workspace, it will be selected automatically
-
-**Note:** When MCP is used in a git project or directory (e.g., Claude Desktop terminal or any other LLM), the workspace is automatically taken from the `meldoc.config.yml` configuration file if it exists.
-
-### Automatic Workspace Memory
-
-**The system automatically remembers your workspace choice!** Just use a workspace once in your conversation:
-
-```text
-You: "List documents in my-workspace"
-```
-
-Now `my-workspace` is automatically your default for all future requests. No manual setup needed!
-
-### Setting default workspace manually (optional)
-
-You can also set a default workspace explicitly via CLI:
-
-```bash
-npx @meldocio/mcp-stdio-proxy@latest config set-workspace workspace-name
-```
-
-But in most cases, the automatic caching (just using the workspace once) is more convenient.
-
-### Workspace for a specific project
-
-If you want different projects to use different workspaces, create a `meldoc.config.yml` file in the project root:
-
-```yaml
-workspaceAlias: workspace-name-for-this-project
-```
-
-Now when working from this folder (or when MCP is used in a git repository), the specified workspace will be used.
-
-## What can Claude do with your documentation?
-
-After setup, Claude gets access to the following capabilities:
-
-### 📖 Working with documents
-
-- **`docs_list`** - Show list of all documents in the project
-- **`docs_get`** - Get content of a document (by UUID or alias)
-- **`docs_tree`** - Show document structure (tree)
-- **`docs_search`** - Find documents by text
-- **`docs_create`** - Create a new document (requires permissions)
-- **`docs_update`** - Update a document (requires permissions)
-- **`docs_delete`** - Delete a document (requires permissions)
-- **`docs_related`** - Show a document's relationships: outgoing links, backlinks, tree neighbors, and link suggestions (views: outgoing / incoming / suggest-links)
-
-### 📁 Working with projects
-
-- **`projects_list`** - Show all available projects
-
-### ⚙️ Management
-
-- **`server_info`** - Information about your account and access permissions
-- **`list_workspaces`** - Show all workspaces
-- **`set_workspace`** - Set default workspace
-- **`get_workspace`** - Get current workspace
-- **`auth_status`** - Check login status
-
-### How to use this?
-
-Just ask Claude in a regular conversation! For example:
-
-- "Show me all documents in the API project"
-- "Find information about the authorization function"
-- "Create a new document with API description"
-- "Which documents link to the database document?"
-
-Claude will automatically select the right tool and execute the request.
-
-## Troubleshooting
-
-### Error: "AUTH_REQUIRED" - token not found
-
-**What to do:**
-
-1. Run the login command:
-
-   ```bash
-   npx @meldocio/mcp-stdio-proxy@latest auth login
-   ```
-
-2. Or check if you're logged in:
-
-   ```bash
-   npx @meldocio/mcp-stdio-proxy@latest auth status
-   ```
-
-3. If using a token directly, make sure it's specified in Claude Desktop configuration
-
-### Error: "WORKSPACE_REQUIRED" - need to select workspace
-
-**What to do:**
-
-If you have multiple workspaces, you need to specify which one to use:
-
-1. View the list of available workspaces:
-
-   ```bash
-   npx @meldocio/mcp-stdio-proxy@latest config list-workspaces
-   ```
-
-2. Set one as default:
-
-   ```bash
-   npx @meldocio/mcp-stdio-proxy@latest config set-workspace workspace-name
-   ```
-
-### Error: "Invalid token" - invalid token
-
-**What to do:**
-
-1. If you used `auth login`, just log in again:
-
-   ```bash
-   npx @meldocio/mcp-stdio-proxy@latest auth login
-   ```
-
-2. Check status:
-
-   ```bash
-   npx @meldocio/mcp-stdio-proxy@latest auth status
-   ```
-
-3. If using a token manually, make sure it hasn't expired and is specified correctly
-
-### Claude Desktop won't connect
-
-**What to do:**
-
-1. **Check the configuration file:**
-   - Make sure the JSON is valid (you can check on jsonlint.com)
-   - Verify that the file path is correct for your OS
-
-2. **Restart Claude Desktop:**
-   - Completely close the application
-   - Open it again
-
-3. **Check logs:**
-   - Claude Desktop has a logs section - check if there are any errors there
-
-### Internet connection issues
-
-If you're experiencing connection errors:
-
-1. Check your internet connection
-2. Make sure the site `https://api.meldoc.io` is accessible
-3. Check if a firewall or proxy is blocking requests
+On top of the server's tools, the proxy answers these itself: `auth_status`, `auth_login_instructions`, `get_workspace` and `set_workspace` (the last two read and write the default above).
 
 ## Development
 
-### Prerequisites
-
-- Node.js >= 14.0.0
-- npm
-
-### Setup
-
 ```bash
-git clone https://github.com/meldoc-io/mcp-stdio-proxy.git
-cd mcp-stdio-proxy
 npm install
-```
-
-### Running Tests
-
-```bash
 npm test
 ```
 
-### Building
-
-No build step is required - the package uses plain JavaScript.
-
-### Publishing
-
-```bash
-npm publish --access public
-```
-
-## Configuration Files
-
-The system uses several files to store settings. Usually you don't need to edit them manually - everything is done through commands.
-
-### `~/.meldoc/credentials.json`
-
-Created automatically when logging in via `auth login`. Contains:
-
-- Access tokens
-- User information
-- Automatic refresh settings
-
-**Do not edit this file manually!**
-
-### `~/.meldoc/config.json`
-
-Global settings:
-
-- Default workspace
-- Other settings
-
-Can be edited manually or through CLI commands.
-
-### `meldoc.config.yml` (optional)
-
-Project-specific settings. Create in the project root if you need to use a different workspace for this project. When MCP is used in a git project or directory, the workspace is automatically taken from this configuration file if it exists.
-
-## Requirements
-
-- **Node.js 18.0.0 or newer** (usually already installed if Claude Desktop works)
-- **Meldoc account** (can be created at [app.meldoc.io](https://app.meldoc.io))
-- **Claude Desktop** installed and working
-
-> 💡 **Checking Node.js:** Open a terminal and run `node --version`. If the command is not found, install Node.js from [nodejs.org](https://nodejs.org)
+`npm run test:local` runs the suite against a local API (`localhost:8080`). `npm run publish:patch` (or `publish:minor`) bumps the version, runs the tests and publishes `package.json` as it is.
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE).
 
 ## Support
 
-For issues, questions, or contributions, please visit:
-
-- GitHub Issues: <https://github.com/meldoc-io/mcp-stdio-proxy/issues>
-- Documentation: <https://docs.meldoc.io>
-
-## Related
-
-- [meldoc MCP Documentation](https://docs.meldoc.io/integrations/mcp)
-- [Claude Desktop MCP Guide](https://docs.anthropic.com/claude/docs/mcp)
+- Issues: <https://github.com/meldoc-io/mcp-stdio-proxy/issues>
+- Documentation: <https://public.meldoc.io/meldoc/documentation/mcp>

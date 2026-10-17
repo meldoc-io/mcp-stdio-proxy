@@ -77,9 +77,7 @@ lib/
 │   └── tools-schema.js   # Local MCP tool definitions (auth, workspace tools)
 │
 ├── http/           # Backend communication
-│   ├── proxy.js          # StreamableHTTPProxy — Streamable HTTP transport (2025-03-26)
-│   ├── client.js         # HTTP client (used by CLI commands)
-│   └── error-handler.js  # Workspace/auth error handling
+│   └── proxy.js          # StreamableHTTPProxy — Streamable HTTP transport (2025-03-26)
 │
 ├── mcp/            # MCP method handlers
 │   ├── handlers.js       # Minimal: ping + isNotification only
@@ -117,111 +115,16 @@ lib/
 
 ### Workspace Management
 
-The proxy implements smart workspace resolution with automatic caching:
+`lib/http/proxy.js` sends a workspace as `X-Meldoc-Workspace` on every request, resolved by
+`lib/core/workspace.js`: `workspaceAlias` from the nearest `meldoc.config.yml` (walking up from the
+working directory), else `~/.meldoc/config.json` (written by `set_workspace` and `config set-workspace`).
 
-**Resolution Priority** (highest to lowest):
+The server treats the header as a pin. A `workspaceAlias` argument on a tool call overrides it for
+that call. With neither, the server picks: the only workspace, or `WORKSPACE_REQUIRED`.
 
-1. **Explicit in tool arguments** - `workspaceAlias` parameter in tool call (highest priority)
-2. **Repo config** (`meldoc.config.yml`) - Project-specific workspace
-3. **Global config** (`~/.meldoc/config.json`) - Cached default workspace
-4. **No workspace** - Server auto-selects (if user has only one workspace)
-
-**Automatic Workspace Caching:**
-
-When a user explicitly provides `workspaceAlias` in any tool call:
-
-```javascript
-// Example: User calls docs_list with explicit workspace
-{
-  "method": "tools/call",
-  "params": {
-    "name": "docs_list",
-    "arguments": {
-      "workspaceAlias": "my-workspace",  // ← Uses this workspace
-      "projectId": "some-project"
-    }
-  }
-}
-```
-
-The proxy will:
-- ✅ **Always use** `my-workspace` for this request (overriding repo/global config)
-- ✅ **Cache it** to `~/.meldoc/config.json` **ONLY if no repo config exists**
-- ✅ **Don't cache** if repo config exists (explicit is one-time override)
-
-**Why this behavior?**
-- If project has `meldoc.config.yml`, it's project-bound to a workspace
-- Explicit workspace is a temporary override, shouldn't break project binding
-- Without repo config, explicit choice becomes your new default
-
-**How to Override Cached Workspace:**
-
-There are three ways to override the cached workspace:
-
-1. **Per-call override** - Explicitly specify `workspaceAlias` in tool arguments:
-   ```javascript
-   // This call uses "different-workspace" and caches it
-   {
-     "method": "tools/call",
-     "params": {
-       "name": "docs_list",
-       "arguments": {
-         "workspaceAlias": "different-workspace"
-       }
-     }
-   }
-   ```
-
-2. **Per-project override** - Create `meldoc.config.yml` in project root:
-   ```yaml
-   workspaceAlias: project-specific-workspace
-   ```
-   This workspace will be used for all calls in this project directory, but won't be cached globally.
-
-3. **Global override** - Use `set_workspace` tool or edit `~/.meldoc/config.json`:
-   ```javascript
-   // Via tool
-   {
-     "method": "tools/call",
-     "params": {
-       "name": "set_workspace",
-       "arguments": {
-         "alias": "new-default-workspace"
-       }
-     }
-   }
-
-   // Or manually edit ~/.meldoc/config.json:
-   {
-     "workspaceAlias": "new-default-workspace"
-   }
-   ```
-
-**Example Scenarios:**
-
-```javascript
-// Scenario 1: No repo config, first use
-docs_list({ workspaceAlias: "work" })  // → uses "work", caches it ✅
-docs_list({})                          // → uses cached "work" ✅
-
-// Scenario 2: No repo config, switch workspace
-docs_list({})                          // → uses cached "work"
-docs_list({ workspaceAlias: "home" })  // → uses "home", re-caches ✅
-docs_list({})                          // → now uses cached "home" ✅
-
-// Scenario 3: WITH repo config (meldoc.config.yml: workspaceAlias: "project")
-docs_list({})                          // → uses repo "project" ✅
-docs_list({ workspaceAlias: "temp" })  // → uses "temp", NOT cached ⚠️
-docs_list({})                          // → back to repo "project" ✅
-
-// Scenario 4: Repo config protects project binding
-// In project with meldoc.config.yml
-docs_list({ workspaceAlias: "work" })  // → uses "work", NOT cached
-cd ~/other-project                     // (no meldoc.config.yml)
-docs_list({})                          // → uses previous cache (NOT "work")
-```
-
-**Implementation:** See `lib/http/client.js:35-58` for caching logic with repo config check.
+The proxy keeps no per-call cache of its own. An earlier HTTP client did, and it stopped running when
+the proxy moved to `StreamableHTTPProxy`: from then until the header was added, no locally configured
+workspace reached the server.
 
 ---
 
@@ -304,11 +207,10 @@ To add a new tool:
 ```
 __tests__/
 ├── protocol/          # Protocol module tests
-├── http/              # HTTP module tests (client, error-handler)
+├── http/              # StreamableHTTPProxy tests
 ├── mcp/               # MCP handler tests
 ├── install/           # Installation tests
-├── scripts/           # Script tests (postinstall, etc.)
-├── cli/               # CLI tests (if added)
+├── cli/               # CLI command tests
 ├── auth.test.js       # Core module tests
 ├── config.test.js
 ├── credentials.test.js
@@ -435,12 +337,23 @@ node bin/cli.js auth status
 
 ### Making a Release
 
-1. **Update version**: `npm run version:patch` or `version:minor`
-2. **Run tests**: `npm test`
-3. **Commit changes**: `git commit -am "vX.X.X"`
-4. **Tag release**: `git tag vX.X.X`
-5. **Push**: `git push && git push --tags`
-6. **Publish**: `npm run publish:patch` or `publish:minor`
+1. **Publish**: `npm run publish:patch` or `publish:minor` — bumps `package.json`, runs the tests (`prepublishOnly`), publishes `package.json` as it is
+2. **Commit and tag**: `git commit -am "vX.X.X" && git tag vX.X.X`
+3. **Push**: `git push && git push --tags`
+
+The Claude Code plugin is versioned on its own, in `.claude-plugin/plugin.json` and
+`.claude-plugin/marketplace.json`: bump both when the plugin changes, not when the npm package does.
+The plugin connects to the hosted server and does not use this package.
+
+`skills/meldoc-format` and `skills/meldoc-writing` are copies. The source is
+`packages/meldoc-skills` in `meldoc-io/meldoc-monorepo`, published at `https://meldoc.io/skills/<name>/SKILL.md`;
+edit them there, never here. To refresh, then bump the plugin version:
+
+```bash
+for s in meldoc-format meldoc-writing; do curl -fsSL "https://meldoc.io/skills/$s/SKILL.md" -o "skills/$s/SKILL.md"; done
+```
+
+Skills belong in `skills/` at the plugin root: Claude Code does not load anything from `.claude-plugin/` but the manifests.
 
 ---
 
@@ -459,10 +372,9 @@ node bin/cli.js auth status
 
 ### Configuration Files
 
-- **`.mcp.json`**: Claude Code plugin config
+- **`.mcp.json`**: Claude Code plugin config — the hosted server over HTTP, not this package
 - **`.claude-plugin/`**: Plugin metadata for marketplace
-- **`package.json`**: NPM package config
-- **`jest.config.js`**: Test configuration
+- **`package.json`**: NPM package config, published as it is; Jest config lives in it
 
 ### Critical Modules
 
@@ -470,18 +382,9 @@ node bin/cli.js auth status
 - **`lib/protocol/tools-schema.js`**: Local tool definitions (auth + workspace tools)
 - **`lib/mcp/handlers.js`**: Minimal local handlers — `ping` + `isNotification` only
 - **`lib/mcp/tools-call.js`**: Local tool routing (4 tools: auth_status, auth_login_instructions, set_workspace, get_workspace)
-- **`lib/http/client.js`**: HTTP client used by CLI commands
 - **`lib/core/auth.js`**: Token resolution + refresh (supports device flow and PKCE)
 - **`lib/core/oauth-pkce.js`**: OAuth 2.1 PKCE flow (browser loopback, dynamic client registration)
 - **`lib/core/workspace.js`**: Workspace resolution (repo → global → none)
-
-### Scripts
-
-- **`scripts/postinstall.js`**: Automatic installation script
-  - Runs after `npm install` from marketplace
-  - Automatically installs Claude Desktop configuration
-  - Skips in development mode (when .git exists or CI=true)
-  - Handles errors gracefully without breaking installation
 
 ---
 
@@ -546,9 +449,7 @@ node bin/cli.js auth status
 - `npm test`: Run all tests
 - `npm run test:watch`: Run tests in watch mode
 - `npm run test:local`: Run tests against localhost
-- `npm run version:patch`: Bump patch version
-- `npm run publish:patch`: Publish patch release
-- `postinstall`: Auto-runs after install to setup Claude Desktop (skipped in dev mode)
+- `npm run publish:patch`: Bump the patch version, test, publish
 
 ### File Locations
 
